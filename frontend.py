@@ -196,6 +196,14 @@ class App(customtkinter.CTk):
         self.presc_template_optionemenu.grid(row=4, column=1, padx=20, pady=(10, 10), sticky=tk.W)
         self.entry_widgets.append(self.presc_template_optionemenu)
 
+        # Boton Preview de template
+        self.preview_button = customtkinter.CTkButton(master=self.tabview, 
+                                                     text='Dose Preview',
+                                                     border_width=3,
+                                                     text_color=("gray10", "#DCE4EE"), 
+                                                     command=self.preview_window)
+        self.preview_button.grid(row=4, column=2, columnspan=1, padx=(20, 20), pady=(20, 20), sticky="ew")
+
         # Eleccion del template de protocolo de imagenes de CC
         self.imagenes_template_label = customtkinter.CTkLabel(master=self.tabview, text="Protocolo de Imágenes de CC", anchor="n")
         self.imagenes_template_label.grid(row=5, column=0, padx=20, pady=(10, 10), sticky=tk.N)
@@ -250,6 +258,19 @@ class App(customtkinter.CTk):
         #     json.dump(self.data, f)
 
         self.destroy()
+
+    def preview_window(self):
+        preview_window = customtkinter.CTkToplevel(self)
+        preview_window.title("Dosis prescriptas del Template seleccionado")
+        preview_window.geometry("600x400")
+        preview_label = customtkinter.CTkLabel(preview_window, text="Dosis Prescriptas")
+        preview_label.grid(row=0, column=0, padx=20, pady=20)
+
+        self.label = customtkinter.CTkLabel(self.sidebar_frame, text='', font=customtkinter.CTkFont(size=15, weight="bold"))
+        self.label.grid(row=row_number, column=0, padx=0, pady=(10, 10))
+        self.entry = customtkinter.CTkEntry(self.sidebar_frame, placeholder_text="Escriba aquí")
+        self.entry.grid(row=row_number, column=1, columnspan=3, padx=(10, 10), pady=(10, 10), sticky="nsew")
+        self.entry_widgets.append(self.entry)
 
 
 

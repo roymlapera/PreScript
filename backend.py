@@ -136,55 +136,49 @@ def format_preprocessing(targets_chart, constraints_chart):
         if j!=0:
             aux = []
             aux.append(constraint_line[0]) if constraint_line[0]!='None' else aux.append('')
-            if constraint_line[1] == 'dvh_superior_percent':
-                aux.append('V(D'+constraint_line[2]+'%)'+' < '+constraint_line[3]+'%')
-                if constraint_line[4] != 'None': 
-                    aux.append('V(D'+constraint_line[4]+'%)'+' < '+constraint_line[5]+'%')
-                else:
-                    aux.append('')
-            elif constraint_line[1] == 'dvh_superior_abs':
-                aux.append('V('+constraint_line[2]+'cGy)'+' < '+constraint_line[3]+'%')
-                if constraint_line[4] != 'None': 
-                    aux.append('V('+constraint_line[4]+'cGy)'+' < '+constraint_line[5]+'%')
-                else:
-                    aux.append('')
-            elif constraint_line[1] == 'dvh_superior_abs_abs':
-                aux.append('V('+constraint_line[2]+'cGy)'+' < '+constraint_line[3]+'cGy')
-                if constraint_line[4] != 'None': 
-                    aux.append('V('+constraint_line[4]+'cGy)'+' < '+constraint_line[5]+'cGy')
-                else:
-                    aux.append('')
-            elif constraint_line[1] == 'dvh_inferior_percent':
-                aux.append('V(D'+constraint_line[2]+'%)'+' > '+constraint_line[3]+'%')
-                if constraint_line[4] != 'None': 
-                    aux.append('V(D'+constraint_line[4]+'%)'+' > '+constraint_line[5]+'%')
-                else:
-                    aux.append('')
-            elif constraint_line[1] == 'dvh_inferior_abs':
+            if constraint_line[1] == 'V(D)>V_%':
                 aux.append('V('+constraint_line[2]+'cGy)'+' > '+constraint_line[3]+'%')
                 if constraint_line[4] != 'None': 
                     aux.append('V('+constraint_line[4]+'cGy)'+' > '+constraint_line[5]+'%')
                 else:
                     aux.append('')
-            elif constraint_line[1] == 'mean_percent':
-                aux.append('Dmed = '+constraint_line[2]+'%')
+            elif constraint_line[1] == 'V(D)>V_cc':
+                aux.append('V('+constraint_line[2]+'cGy)'+' > '+constraint_line[3]+'cc')
                 if constraint_line[4] != 'None': 
-                    aux.append('Dmed = '+constraint_line[4]+'%')
+                    aux.append('V('+constraint_line[4]+'cGy)'+' > '+constraint_line[5]+'cc')
                 else:
                     aux.append('')
-            elif constraint_line[1] == 'mean_abs':
+            elif constraint_line[1] == 'V(D)<V_%':
+                aux.append('V('+constraint_line[2]+'cGy)'+' < '+constraint_line[3]+'%')
+                if constraint_line[4] != 'None': 
+                    aux.append('V('+constraint_line[4]+'cGy)'+' < '+constraint_line[5]+'%')
+                else:
+                    aux.append('')
+            elif constraint_line[1] == 'V(D)<V_cc':
+                aux.append('V('+constraint_line[2]+'cGy)'+' < '+constraint_line[3]+'cc')
+                if constraint_line[4] != 'None': 
+                    aux.append('V('+constraint_line[4]+'cGy)'+' < '+constraint_line[5]+'cc')
+                else:
+                    aux.append('')
+            elif constraint_line[1] == 'D(V_%)<D':
+                aux.append('V('+constraint_line[2]+'%)'+' < '+constraint_line[3]+'cGy')
+                if constraint_line[4] != 'None': 
+                    aux.append('V('+constraint_line[4]+'%)'+' < '+constraint_line[5]+'cGy')
+                else:
+                    aux.append('')
+            elif constraint_line[1] == 'D(V_cc)<D':
+                aux.append('V('+constraint_line[2]+'cc)'+' < '+constraint_line[3]+'cGy')
+                if constraint_line[4] != 'None': 
+                    aux.append('V('+constraint_line[4]+'cc)'+' < '+constraint_line[5]+'cGy')
+                else:
+                    aux.append('')
+            elif constraint_line[1] == 'Dmedia':
                 aux.append('Dmed = '+constraint_line[2]+'cGy')
                 if constraint_line[4] != 'None': 
                     aux.append('Dmed = '+constraint_line[4]+'cGy')
                 else:
                     aux.append('')
-            elif constraint_line[1] == 'max_percent':
-                aux.append('Dmax < '+constraint_line[2]+'%')
-                if constraint_line[4] != 'None': 
-                    aux.append('Dmax < '+constraint_line[4]+'%')
-                else:
-                    aux.append('')
-            elif constraint_line[1] == 'max_abs':
+            elif constraint_line[1] == 'Dmax':
                 aux.append('Dmax < '+constraint_line[2]+'cGy')
                 if constraint_line[4] != 'None': 
                     aux.append('Dmax < '+constraint_line[4]+'cGy')
