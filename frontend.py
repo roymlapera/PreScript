@@ -66,9 +66,9 @@ class App(customtkinter.CTk):
 
         def patient_data_label_generator(self, title: str, row_number: int) -> None:
             self.label = customtkinter.CTkLabel(self.sidebar_frame, text=title, font=customtkinter.CTkFont(size=15, weight="bold"))
-            self.label.grid(row=row_number, column=0, padx=0, pady=(10, 10))
+            self.label.grid(row=row_number, column=0, padx=(20,10), pady=10)
             self.entry = customtkinter.CTkEntry(self.sidebar_frame, placeholder_text="Escriba aquí")
-            self.entry.grid(row=row_number, column=1, columnspan=3, padx=(10, 10), pady=(10, 10), sticky="nsew")
+            self.entry.grid(row=row_number, column=1, padx=20, pady=10, sticky="nsew")
             self.entry_widgets.append(self.entry)
 
 
@@ -81,9 +81,10 @@ class App(customtkinter.CTk):
         self.geometry(f"{1400}x{950}")
         self.resizable(False, False)
 
-        tool_bar(self)
+        # tool_bar(self)
 
         # configure grid layout (4x4)
+        
         self.grid_columnconfigure((2,3,4), weight=1, uniform="column")
         self.grid_rowconfigure(2, weight=1)
         self.grid_rowconfigure(3, weight=8)
@@ -91,35 +92,30 @@ class App(customtkinter.CTk):
 
         #****************************************************************************************************************
 
-        # Sidebar donde viviran los datos del paciente
-        self.sidebar_frame = customtkinter.CTkFrame(self, width=150, corner_radius=0)
-        self.sidebar_frame.grid(row=1, column=0, rowspan=4, padx=10, pady=(20, 30), sticky="nsew")
+        # -------------------- Frame donde vivira el logo y el titulo -----------------------
 
+        self.title_frame = customtkinter.CTkFrame(self, width=1400, corner_radius=0)
+        self.title_frame.grid(row=0, column=0, columnspan=5, padx=20, pady=20, sticky="ew")
 
         # Logo intecnus
-        # Open the image with PIL
         pil_image = Image.open(self.icon_path)
-
-        # Convert PIL Image to Tkinter PhotoImage
-        tk_image = ImageTk.PhotoImage(pil_image, master=self)
-
-        # Add the image to the Canvas widget
-        self.canvas = tk.Canvas(self.sidebar_frame, width=270, height=100, bg='black')
-        self.canvas.create_image(0, 0, anchor=tk.NW, image=tk_image, tags='image_tag')
-
-        # Keep a reference to the image to avoid garbage collection
+        tk_image = ImageTk.PhotoImage(pil_image, master=self)  # PIL Image to Tkinter PhotoImage
+        self.canvas = tk.Canvas(self.title_frame, width=270, height=100, bg='black') # Add the image to the Canvas widget
+        self.canvas.create_image(0, 0, anchor=tk.NW, image=tk_image, tags='image_tag') # Keep a reference to the image to avoid garbage collection
         self.canvas.image = tk_image
+        self.canvas.grid(row=0, column=0, rowspan=1, columnspan=1, padx=(10, 10), pady=(10, 10)) # Configure the Canvas grid to control position
 
-        # Configure the Canvas grid to control position
-        self.canvas.grid(row=0, column=0, rowspan=1, columnspan=4)
+        # Titulo
+        self.titulo_label = customtkinter.CTkLabel(self.title_frame, text="Prescripción de Radioterapia", font=customtkinter.CTkFont(size=40, weight="bold"))
+        self.titulo_label.grid(row=0, column=1, columnspan=4, padx=(30, 10), pady=(10, 10), sticky="ew")
 
+        # ---------------- Sidebar donde viviran los datos del paciente -------------------- 
 
-        # Titulo  
-        self.titulo_label = customtkinter.CTkLabel(self.sidebar_frame, text="Prescripción de Radioterapia", font=customtkinter.CTkFont(size=30, weight="bold"))
-        self.titulo_label.grid(row=1, column=0, columnspan=4, padx=10, pady=(20, 10))
+        self.sidebar_frame = customtkinter.CTkFrame(self, width=300, corner_radius=0)
+        self.sidebar_frame.grid(row=1, column=0, padx=20, pady=(0,20), sticky="ew")
 
         self.datos_label = customtkinter.CTkLabel(self.sidebar_frame, text="Datos del paciente", font=customtkinter.CTkFont(size=20, weight="bold"))
-        self.datos_label.grid(row=2, column=0, columnspan=4, padx=20, pady=(20, 10))
+        self.datos_label.grid(row=0, column=0, columnspan=2, padx=20, pady=20, sticky="ew")
 
         # Entradas para los datos del paciente
         self.patient_labels = ['HC','Apellido','Nombres','Documento','Fecha de Admisión','Fecha de Nacimiento','Ciudad/País','Obra Social', 'Médico Derivante','Estadificación', 'Performance', 'Guía utilizada']
@@ -130,113 +126,144 @@ class App(customtkinter.CTk):
         for i, label in enumerate(self.patient_labels):
             patient_data_label_generator(self, label, i+3)
 
-        self.appearance_mode_label = customtkinter.CTkLabel(self.sidebar_frame, text="Apariencia", font=customtkinter.CTkFont(size=15, weight="bold"), anchor="s")
-        self.appearance_mode_label.grid(row=len(self.patient_labels)+5, column=0, padx=20, pady=10, sticky="s")
-        self.appearance_mode_optionemenu = customtkinter.CTkOptionMenu(self.sidebar_frame, values=["Dark", "Light"],
+        # -------------------- Frame donde vivira el appearance mode -----------------------
+
+        self.appearance_frame = customtkinter.CTkFrame(self, width=300, corner_radius=0)
+        self.appearance_frame.grid(row=2, column=0, columnspan=2, padx=20, pady=(0, 20), sticky="ew")
+
+        self.appearance_mode_label = customtkinter.CTkLabel(self.appearance_frame, text="Apariencia", font=customtkinter.CTkFont(size=15, weight="bold"), anchor="n")
+        self.appearance_mode_label.grid(row=0, column=0, padx=20, pady=20, sticky="ew")
+        self.appearance_mode_optionemenu = customtkinter.CTkOptionMenu(self.appearance_frame, values=["Dark", "Light"],
                                                                        command=self.change_appearance_mode_event)
-        self.appearance_mode_optionemenu.grid(row=len(self.patient_labels)+5, column=1, columnspan=4, padx=20, pady=10, sticky="s")
+        self.appearance_mode_optionemenu.grid(row=0, column=1, padx=20, pady=20, sticky="ew")
+
+        self.appearance_mode_optionemenu.set("Dark")
         
         #****************************************************************************************************************
 
-        # Entrada de texto para incluir el resumen del paciente
-        self.text_label = customtkinter.CTkLabel(self, text='Conclusiones', font=customtkinter.CTkFont(size=20, weight="bold"))
-        self.text_label.grid(row=1, column=1, columnspan=4, padx=(20, 20), pady=(20, 20), sticky="n")
+        # Frame donde viviran todas los widget de ANTECEDENTES
+        self.patient_resume_frame = customtkinter.CTkFrame(self, corner_radius=0)
+        self.patient_resume_frame.grid(row=1, column=2, columnspan=3, padx=(10,20), pady=(0, 20), sticky="new")
+        self.patient_resume_frame.grid_columnconfigure(0, weight=1)
+        self.patient_resume_frame.grid_rowconfigure(0, weight=1)
+        self.patient_resume_frame.grid_rowconfigure(1, weight=2)
 
-        self.textbox = customtkinter.CTkTextbox(self, height=300, width=1110)
-        self.textbox.grid(row=2, column=1, columnspan=4, padx=(10, 10), pady=(10, 10), sticky="n")
+        # Titulo antecedentes
+        self.presc_label = customtkinter.CTkLabel(self.patient_resume_frame, text='Antecedentes Clínicos', font=customtkinter.CTkFont(size=20, weight="bold"))
+        self.presc_label.grid(row=0, column=0, columnspan=3, padx=20, pady=20, sticky="n")
 
-        self.entry_widgets.append(self.textbox)
+        # Entrada para escribir breve oracion resumiendo los antecedentes
+        self.plan_entry = customtkinter.CTkTextbox(master=self.patient_resume_frame, height=100, font=customtkinter.CTkFont(size=14) )
+        self.plan_entry.grid(row=1, column=0, padx=20, pady=(10, 20), sticky="nsew")
+        self.plan_entry.insert("0.0", "Describir aquí los antecedentes clínicos del paciente.")
         
         #****************************************************************************************************************
 
-        # Frame donde viviran todas los widget de precripcion
-        self.tabview = customtkinter.CTkFrame(self)
-        self.tabview.grid(row=3, column=1, columnspan=4, padx=(10, 10), pady=(0, 0), sticky="nsew")
-        self.tabview.grid_rowconfigure((0,1,2,3,4), weight=1)
-        self.tabview.grid_columnconfigure(0, weight=3, uniform="column")
-        self.tabview.grid_columnconfigure(1, weight=2, uniform="column")
+        # # Frame donde viviran todas los widget de precripcion
+        self.presc_frame = customtkinter.CTkFrame(self, corner_radius=0)
+        self.presc_frame.grid(row=2, column=2, columnspan=3, padx=(10,20), pady=(0, 20), sticky="new")
+        self.presc_frame.grid_rowconfigure((0,1,2,3,4), weight=1)
+        self.presc_frame.grid_columnconfigure(0, weight=3, uniform="column")
+        self.presc_frame.grid_columnconfigure(1, weight=2, uniform="column")
 
-        self.presc_label = customtkinter.CTkLabel(master=self.tabview, text='Prescripción de Dosis', font=customtkinter.CTkFont(size=20, weight="bold"))
-        self.presc_label.grid(row=0, column=0, columnspan=4, padx=(0, 0), pady=(10, 0))
+        # self.presc_label = customtkinter.CTkLabel(master=self.tabview, text='Prescripción de Dosis', font=customtkinter.CTkFont(size=20, weight="bold"))
+        # self.presc_label.grid(row=0, column=0, columnspan=4, padx=(0, 0), pady=(10, 0))
 
-        # Entrada para escribir breve oracion resumiendo el tratamiento
-        self.plan_entry = customtkinter.CTkEntry(master=self.tabview, placeholder_text="Describir aquí brevemente el esquema de tratamiento")
-        self.plan_entry.grid(row=1, column=0, columnspan=2, padx=(20, 0), pady=(10, 10), sticky="nsew")
-        self.entry_widgets.append(self.plan_entry)
+        # # Entrada para escribir breve oracion resumiendo el tratamiento
+        # self.plan_entry = customtkinter.CTkEntry(master=self.tabview, placeholder_text="Describir aquí brevemente el esquema de tratamiento")
+        # self.plan_entry.grid(row=1, column=0, columnspan=2, padx=(20, 0), pady=(10, 10), sticky="nsew")
+        # self.entry_widgets.append(self.plan_entry)
 
-        # Eleccion de la tecnica de tratamiento
-        self.technique_label = customtkinter.CTkLabel(master=self.tabview, text="Técnica", anchor="w")
-        self.technique_label.grid(row=1, column=2, padx=20, pady=(10, 10), sticky=tk.W)
+        # # Eleccion de la tecnica de tratamiento
+        # self.technique_label = customtkinter.CTkLabel(master=self.tabview, text="Técnica", anchor="w")
+        # self.technique_label.grid(row=1, column=2, padx=20, pady=(10, 10), sticky=tk.W)
 
-        techniques = ['2D','3D','IMRT', 'VMAT', 'SBRT', 'SRS']
+        # techniques = ['2D','3D','IMRT', 'VMAT', 'SBRT', 'SRS']
         
-        self.technique_optionemenu = customtkinter.CTkOptionMenu(self.tabview, values=techniques)
-        self.technique_optionemenu.grid(row=1, column=3, padx=20, pady=(10, 10), sticky=tk.W)
-        self.entry_widgets.append(self.technique_optionemenu)
+        # self.technique_optionemenu = customtkinter.CTkOptionMenu(self.tabview, values=techniques)
+        # self.technique_optionemenu.grid(row=1, column=3, padx=20, pady=(10, 10), sticky=tk.W)
+        # self.entry_widgets.append(self.technique_optionemenu)
 
-        # Eleccion de la intención del tto
-        self.intention_label = customtkinter.CTkLabel(master=self.tabview, text="Intención del tratamiento", anchor="n")
-        self.intention_label.grid(row=3, column=0, padx=20, pady=(10, 10), sticky=tk.N)
+        # # Eleccion de la intención del tto
+        # self.intention_label = customtkinter.CTkLabel(master=self.tabview, text="Intención del tratamiento", anchor="n")
+        # self.intention_label.grid(row=3, column=0, padx=20, pady=(10, 10), sticky=tk.N)
 
-        intention_options = ['Curativa', 'Paliativa']
+        # intention_options = ['Curativa', 'Paliativa']
 
-        self.intention_optionemenu = customtkinter.CTkOptionMenu(master=self.tabview, values=intention_options, anchor="w")
-        self.intention_optionemenu.grid(row=3, column=1, padx=20, pady=(10, 10), sticky=tk.W)
-        self.entry_widgets.append(self.intention_optionemenu)
+        # self.intention_optionemenu = customtkinter.CTkOptionMenu(master=self.tabview, values=intention_options, anchor="w")
+        # self.intention_optionemenu.grid(row=3, column=1, padx=20, pady=(10, 10), sticky=tk.W)
+        # self.entry_widgets.append(self.intention_optionemenu)
 
-        # Eleccion del template de prescripcion
-        self.presc_template_label = customtkinter.CTkLabel(master=self.tabview, text="Template de Prescripción", anchor="n")
-        self.presc_template_label.grid(row=4, column=0, padx=20, pady=(10, 10), sticky=tk.N)
+        # # Eleccion del template de prescripcion
+        # self.presc_template_label = customtkinter.CTkLabel(master=self.tabview, text="Template de Prescripción", anchor="n")
+        # self.presc_template_label.grid(row=4, column=0, padx=20, pady=(10, 10), sticky=tk.N)
 
-        presc_template = xlstools.get_cell_content(file_path=self.contraints_excel_filepath, 
-                                      cell_coordinate='B2', 
-                                      sheet_name=None)[2:]
+        # presc_template = xlstools.get_cell_content(file_path=self.contraints_excel_filepath, 
+        #                               cell_coordinate='B2', 
+        #                               sheet_name=None)[2:]
 
-        self.presc_template_optionemenu = customtkinter.CTkOptionMenu(master=self.tabview, values=presc_template, anchor="w")
-        self.presc_template_optionemenu.grid(row=4, column=1, padx=20, pady=(10, 10), sticky=tk.W)
-        self.entry_widgets.append(self.presc_template_optionemenu)
+        # self.presc_template_optionemenu = customtkinter.CTkOptionMenu(master=self.tabview, values=presc_template, anchor="w")
+        # self.presc_template_optionemenu.grid(row=4, column=1, padx=20, pady=(10, 10), sticky=tk.W)
+        # self.entry_widgets.append(self.presc_template_optionemenu)
 
-        # Boton Preview de template
-        self.preview_button = customtkinter.CTkButton(master=self.tabview, 
-                                                     text='Dose Preview',
-                                                     border_width=3,
-                                                     text_color=("gray10", "#DCE4EE"), 
-                                                     command=self.preview_window)
-        self.preview_button.grid(row=4, column=2, columnspan=1, padx=(20, 20), pady=(20, 20), sticky="ew")
+        # # Boton Preview de template
+        # self.preview_button = customtkinter.CTkButton(master=self.tabview, 
+        #                                              text='Dose Preview',
+        #                                              border_width=3,
+        #                                              text_color=("gray10", "#DCE4EE"), 
+        #                                              command=self.preview_window)
+        # self.preview_button.grid(row=4, column=2, columnspan=1, padx=(20, 20), pady=(20, 20), sticky="ew")
 
-        # Eleccion del template de protocolo de imagenes de CC
-        self.imagenes_template_label = customtkinter.CTkLabel(master=self.tabview, text="Protocolo de Imágenes de CC", anchor="n")
-        self.imagenes_template_label.grid(row=5, column=0, padx=20, pady=(10, 10), sticky=tk.N)
+        # # Eleccion del template de protocolo de imagenes de CC
+        # self.imagenes_template_label = customtkinter.CTkLabel(master=self.tabview, text="Protocolo de Imágenes de CC", anchor="n")
+        # self.imagenes_template_label.grid(row=5, column=0, padx=20, pady=(10, 10), sticky=tk.N)
 
-        imagenes_template = xlstools.cell_data_importer(openpyxl.load_workbook(self.contraints_excel_filepath, read_only=True)['General'],
-                                               (2,'D'), 
-                                               (20,'D'))
-        imagenes_template = [item for sublist in imagenes_template for item in sublist ]
-        imagenes_template = [item for item in imagenes_template if item !='None']
+        # imagenes_template = xlstools.cell_data_importer(openpyxl.load_workbook(self.contraints_excel_filepath, read_only=True)['General'],
+        #                                        (2,'D'), 
+        #                                        (20,'D'))
+        # imagenes_template = [item for sublist in imagenes_template for item in sublist ]
+        # imagenes_template = [item for item in imagenes_template if item !='None']
         
 
 
-        self.imagenes_template_optionemenu = customtkinter.CTkOptionMenu(master=self.tabview, 
-                                                                         values=imagenes_template, 
-                                                                         anchor='w')
-        self.imagenes_template_optionemenu.grid(row=5, column=1, padx=20, pady=(10, 10), sticky=tk.W)
-        self.entry_widgets.append(self.imagenes_template_optionemenu)
+        # self.imagenes_template_optionemenu = customtkinter.CTkOptionMenu(master=self.tabview, 
+        #                                                                  values=imagenes_template, 
+        #                                                                  anchor='w')
+        # self.imagenes_template_optionemenu.grid(row=5, column=1, padx=20, pady=(10, 10), sticky=tk.W)
+        # self.entry_widgets.append(self.imagenes_template_optionemenu)
 
 
 
         #****************************************************************************************************************
 
-        # Boton Generar Prescripcion
-        self.main_button_1 = customtkinter.CTkButton(master=self, 
+        # Boton Generar Prescripcion]]
+
+        self.button_frame = customtkinter.CTkFrame(self, width=300, corner_radius=0)
+        self.button_frame.grid(row=2, column=1, columnspan=3, padx=20, pady=20, sticky="ew")
+        self.presc_frame.grid_rowconfigure(0, weight=1)
+        self.presc_frame.grid_columnconfigure(0, weight=1, uniform="column")
+
+        self.main_button = customtkinter.CTkButton(self.button_frame, 
                                                      text='Generar Prescripción',
                                                      border_width=3,
                                                      text_color=("gray10", "#DCE4EE"), 
                                                      command=self.get_entries)
-        self.main_button_1.grid(row=4, column=1, columnspan=4, padx=(20, 20), pady=(20, 20), sticky="ew")
+        self.main_button.grid(row=2, column=1, padx=20, pady=20, sticky="n")
 
-        #****************************************************************************************************************
 
-        self.appearance_mode_optionemenu.set("Dark")
+
+        # self.appearance_frame = customtkinter.CTkFrame(self, width=300, corner_radius=0)
+        # self.appearance_frame.grid(row=2, column=0, columnspan=2, padx=20, pady=(0, 20), sticky="ew")
+
+        # self.appearance_mode_label = customtkinter.CTkLabel(self.appearance_frame, text="Apariencia", font=customtkinter.CTkFont(size=15, weight="bold"), anchor="n")
+        # self.appearance_mode_label.grid(row=0, column=0, padx=20, pady=20, sticky="ew")
+
+
+
+
+        # #****************************************************************************************************************
+
+        
 
     def change_appearance_mode_event(self, new_appearance_mode: str):
         customtkinter.set_appearance_mode(new_appearance_mode)
