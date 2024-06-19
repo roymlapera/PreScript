@@ -13,6 +13,38 @@ customtkinter.set_appearance_mode("dark")  # Modes: "System" (standard), "Dark",
 customtkinter.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
 
 # %%
+class PlaceholderTextbox(customtkinter.CTkTextbox):
+    def __init__(self, master=None, placeholder="PLACEHOLDER", **kwargs):
+        super().__init__(master, **kwargs)
+        
+        self.placeholder = placeholder
+        self.default_text_color = self.cget("text_color")
+        
+        self.insert("1.0", self.placeholder)
+        self.configure(text_color=self.default_text_color)
+        self.bind("<FocusIn>", self.foc_in)
+        self.bind("<FocusOut>", self.foc_out)
+        self.bind("<Key>", self.key_press)
+        
+        self.has_placeholder = True
+
+    def foc_in(self, *args):
+        if self.has_placeholder:
+            self.delete("1.0", "end")
+            self.configure(text_color=self.default_text_color)
+
+    def foc_out(self, *args):
+        if not self.get("1.0", "end").strip():
+            self.insert("1.0", self.placeholder)
+            self.configure(text_color=self.default_text_color)
+            self.has_placeholder = True
+
+    def key_press(self, *args):
+        if self.has_placeholder and self.get("1.0", "end").strip() == self.placeholder:
+            self.delete("1.0", "end")
+            self.configure(text_color=self.default_text_color)
+            self.has_placeholder = False
+
 class App(customtkinter.CTk):
     def __init__(self, contraints_excel_filepath, icon_path):
         super().__init__()
@@ -118,7 +150,7 @@ class App(customtkinter.CTk):
         self.datos_label.grid(row=0, column=0, columnspan=2, padx=20, pady=20, sticky="ew")
 
         # Entradas para los datos del paciente
-        self.patient_labels = ['HC','Apellido','Nombres','Documento','Fecha de Admisión','Fecha de Nacimiento','Ciudad/País','Obra Social', 'Médico Derivante','Estadificación', 'Performance', 'Guía utilizada']
+        self.patient_labels = ['HC','Apellido','Nombres','Documento','Fecha de Admisión','Fecha de Nacimiento','Ciudad/País','Obra Social', 'Médico Derivante', 'Guía utilizada']
 
         self.data = {}
         self.entry_widgets = []
@@ -141,96 +173,125 @@ class App(customtkinter.CTk):
         
         #****************************************************************************************************************
 
-        # Frame donde viviran todas los widget de ANTECEDENTES
-        self.patient_resume_frame = customtkinter.CTkFrame(self, corner_radius=0)
-        self.patient_resume_frame.grid(row=1, column=2, columnspan=3, padx=(10,20), pady=(0, 20), sticky="new")
-        self.patient_resume_frame.grid_columnconfigure(0, weight=1)
-        self.patient_resume_frame.grid_rowconfigure(0, weight=1)
-        self.patient_resume_frame.grid_rowconfigure(1, weight=2)
+        # Frame donde viviran todas los widget de ANTECEDENTES Y PRESCRIPCION
+
+        self.presc_frame = customtkinter.CTkFrame(self, corner_radius=0)
+        self.presc_frame.grid(row=1, column=2, columnspan=3, padx=(10,20), pady=(0, 20), sticky="new")
+        self.presc_frame.grid_columnconfigure(0, weight=1)
+        self.presc_frame.grid_rowconfigure(0, weight=1)
+        self.presc_frame.grid_rowconfigure(1, weight=2)
 
         # Titulo antecedentes
-        self.presc_label = customtkinter.CTkLabel(self.patient_resume_frame, text='Antecedentes Clínicos', font=customtkinter.CTkFont(size=20, weight="bold"))
-        self.presc_label.grid(row=0, column=0, columnspan=3, padx=20, pady=20, sticky="n")
+        self.background_label = customtkinter.CTkLabel(self.presc_frame, text='Antecedentes Clínicos', font=customtkinter.CTkFont(size=20, weight="bold"))
+        self.background_label.grid(row=0, column=0, columnspan=3, padx=20, pady=20, sticky="n")
 
         # Entrada para escribir breve oracion resumiendo los antecedentes
-        self.plan_entry = customtkinter.CTkTextbox(master=self.patient_resume_frame, height=100, font=customtkinter.CTkFont(size=14) )
-        self.plan_entry.grid(row=1, column=0, padx=20, pady=(10, 20), sticky="nsew")
-        self.plan_entry.insert("0.0", "Describir aquí los antecedentes clínicos del paciente.")
+        self.background_entry = PlaceholderTextbox(master=self.presc_frame, 
+                                                   placeholder="Describir aquí los antecedentes clínicos del paciente.", 
+                                                   wrap="word", 
+                                                   height=100, 
+                                                   font=customtkinter.CTkFont(size=14),
+                                                   fg_color="#1C1C1C",  # Example fg_color
+                                                   text_color="darkgray")
+        self.background_entry.grid(row=1, column=0, columnspan=3, padx=20, pady=(10, 20), sticky="nsew")
+
         
-        #****************************************************************************************************************
+        # ----------------------------------------- PRESCRIPCION ------------------------------------------------
 
-        # # Frame donde viviran todas los widget de precripcion
-        self.presc_frame = customtkinter.CTkFrame(self, corner_radius=0)
-        self.presc_frame.grid(row=2, column=2, columnspan=3, padx=(10,20), pady=(0, 20), sticky="new")
-        self.presc_frame.grid_rowconfigure((0,1,2,3,4), weight=1)
-        self.presc_frame.grid_columnconfigure(0, weight=3, uniform="column")
-        self.presc_frame.grid_columnconfigure(1, weight=2, uniform="column")
+        self.presc_label = customtkinter.CTkLabel(master=self.presc_frame, text='Prescripción de Dosis', font=customtkinter.CTkFont(size=20, weight="bold"))
+        self.presc_label.grid(row=2, column=0, columnspan=3, padx=20, pady=20)
+        self.presc_frame.grid_columnconfigure(0, weight=1)
+        self.presc_frame.grid_columnconfigure(1, weight=1)
+        self.presc_frame.grid_columnconfigure(2, weight=10)
 
-        # self.presc_label = customtkinter.CTkLabel(master=self.tabview, text='Prescripción de Dosis', font=customtkinter.CTkFont(size=20, weight="bold"))
-        # self.presc_label.grid(row=0, column=0, columnspan=4, padx=(0, 0), pady=(10, 0))
+        # Entrada para escribir breve oracion resumiendo el tratamiento
+        self.plan_entry = customtkinter.CTkEntry(master=self.presc_frame, placeholder_text="Describir aquí brevemente el esquema de tratamiento")
+        self.plan_entry.grid(row=3, column=0, columnspan=3, padx=20, pady=(10, 20), sticky="nsew")
+        self.entry_widgets.append(self.plan_entry)
 
-        # # Entrada para escribir breve oracion resumiendo el tratamiento
-        # self.plan_entry = customtkinter.CTkEntry(master=self.tabview, placeholder_text="Describir aquí brevemente el esquema de tratamiento")
-        # self.plan_entry.grid(row=1, column=0, columnspan=2, padx=(20, 0), pady=(10, 10), sticky="nsew")
-        # self.entry_widgets.append(self.plan_entry)
+        option_menu_width = 250
 
-        # # Eleccion de la tecnica de tratamiento
-        # self.technique_label = customtkinter.CTkLabel(master=self.tabview, text="Técnica", anchor="w")
-        # self.technique_label.grid(row=1, column=2, padx=20, pady=(10, 10), sticky=tk.W)
+        # Eleccion de la tecnica de tratamiento
+        self.technique_label = customtkinter.CTkLabel(master=self.presc_frame, text="Técnica", anchor="w")
+        self.technique_label.grid(row=4, column=0, padx=20, pady=10, sticky=tk.W)
 
-        # techniques = ['2D','3D','IMRT', 'VMAT', 'SBRT', 'SRS']
+        techniques = ['3D','IMRT', 'VMAT', 'SBRT', 'SRS']
         
-        # self.technique_optionemenu = customtkinter.CTkOptionMenu(self.tabview, values=techniques)
-        # self.technique_optionemenu.grid(row=1, column=3, padx=20, pady=(10, 10), sticky=tk.W)
-        # self.entry_widgets.append(self.technique_optionemenu)
+        self.technique_optionemenu = customtkinter.CTkOptionMenu(self.presc_frame, values=techniques, anchor="w")
+        self.technique_optionemenu.grid(row=4, column=1, padx=20, pady=10, sticky=tk.W)
+        self.technique_optionemenu.configure(width=option_menu_width)
+        self.entry_widgets.append(self.technique_optionemenu)
 
-        # # Eleccion de la intención del tto
-        # self.intention_label = customtkinter.CTkLabel(master=self.tabview, text="Intención del tratamiento", anchor="n")
-        # self.intention_label.grid(row=3, column=0, padx=20, pady=(10, 10), sticky=tk.N)
+        # Eleccion de la intención del tto
+        self.intention_label = customtkinter.CTkLabel(master=self.presc_frame, text="Intención del tratamiento", anchor="w")
+        self.intention_label.grid(row=5, column=0, padx=20, pady=10, sticky=tk.W)
 
-        # intention_options = ['Curativa', 'Paliativa']
+        intention_options = ['Adyuvante', 'Neoadyuvante', 'Radical', 'Paliativo']
 
-        # self.intention_optionemenu = customtkinter.CTkOptionMenu(master=self.tabview, values=intention_options, anchor="w")
-        # self.intention_optionemenu.grid(row=3, column=1, padx=20, pady=(10, 10), sticky=tk.W)
-        # self.entry_widgets.append(self.intention_optionemenu)
+        self.intention_optionemenu = customtkinter.CTkOptionMenu(master=self.presc_frame, values=intention_options, anchor="w")
+        self.intention_optionemenu.grid(row=5, column=1, padx=20, pady=10, sticky=tk.W)
+        self.intention_optionemenu.configure(width=option_menu_width)
+        self.entry_widgets.append(self.intention_optionemenu)
 
-        # # Eleccion del template de prescripcion
-        # self.presc_template_label = customtkinter.CTkLabel(master=self.tabview, text="Template de Prescripción", anchor="n")
-        # self.presc_template_label.grid(row=4, column=0, padx=20, pady=(10, 10), sticky=tk.N)
+        # Eleccion del template de prescripcion
+        self.presc_template_label = customtkinter.CTkLabel(master=self.presc_frame, text="Template de Prescripción", anchor="w")
+        self.presc_template_label.grid(row=6, column=0, padx=20, pady=10, sticky=tk.W)
 
-        # presc_template = xlstools.get_cell_content(file_path=self.contraints_excel_filepath, 
-        #                               cell_coordinate='B2', 
-        #                               sheet_name=None)[2:]
+        presc_template = xlstools.get_cell_content(file_path=self.contraints_excel_filepath, 
+                                      cell_coordinate='B2', 
+                                      sheet_name=None)[2:]
 
-        # self.presc_template_optionemenu = customtkinter.CTkOptionMenu(master=self.tabview, values=presc_template, anchor="w")
-        # self.presc_template_optionemenu.grid(row=4, column=1, padx=20, pady=(10, 10), sticky=tk.W)
-        # self.entry_widgets.append(self.presc_template_optionemenu)
+        self.presc_template_optionemenu = customtkinter.CTkOptionMenu(master=self.presc_frame, values=presc_template, anchor="w")
+        self.presc_template_optionemenu.grid(row=6, column=1, padx=20, pady=10, sticky=tk.W)
+        self.presc_template_optionemenu.configure(width=option_menu_width)
+        self.entry_widgets.append(self.presc_template_optionemenu)
 
-        # # Boton Preview de template
-        # self.preview_button = customtkinter.CTkButton(master=self.tabview, 
-        #                                              text='Dose Preview',
-        #                                              border_width=3,
-        #                                              text_color=("gray10", "#DCE4EE"), 
-        #                                              command=self.preview_window)
-        # self.preview_button.grid(row=4, column=2, columnspan=1, padx=(20, 20), pady=(20, 20), sticky="ew")
+        # Eleccion del template de protocolo de imagenes de CC
+        self.imagenes_template_label = customtkinter.CTkLabel(master=self.presc_frame, text="Protocolo de Imágenes de CC", anchor="w")
+        self.imagenes_template_label.grid(row=7, column=0, padx=20, pady=10, sticky=tk.W)
 
-        # # Eleccion del template de protocolo de imagenes de CC
-        # self.imagenes_template_label = customtkinter.CTkLabel(master=self.tabview, text="Protocolo de Imágenes de CC", anchor="n")
-        # self.imagenes_template_label.grid(row=5, column=0, padx=20, pady=(10, 10), sticky=tk.N)
+        imagenes_template = xlstools.cell_data_importer(openpyxl.load_workbook(self.contraints_excel_filepath, read_only=True)['General'],
+                                               (3,'E'), 
+                                               (21,'E'))
+        imagenes_template = [item for sublist in imagenes_template for item in sublist]
+        imagenes_template = [item for item in imagenes_template if item !='None']
 
-        # imagenes_template = xlstools.cell_data_importer(openpyxl.load_workbook(self.contraints_excel_filepath, read_only=True)['General'],
-        #                                        (2,'D'), 
-        #                                        (20,'D'))
-        # imagenes_template = [item for sublist in imagenes_template for item in sublist ]
-        # imagenes_template = [item for item in imagenes_template if item !='None']
+
+        chosen_presc_template = self.presc_template_optionemenu.get()
+        default = xlstools.cell_data_importer(openpyxl.load_workbook(self.contraints_excel_filepath, read_only=True)[chosen_presc_template],
+                                               (5,'G'), 
+                                               (5,'G'))[0][0]
+        
+        self.default_template = tk.StringVar(value = default)
+
+        self.imagenes_template_optionemenu = customtkinter.CTkOptionMenu(master=self.presc_frame, 
+                                                                         variable=self.default_template,
+                                                                         values=imagenes_template, 
+                                                                         anchor='w')
+        self.imagenes_template_optionemenu.grid(row=7, column=1, padx=20, pady=10, sticky=tk.W)
+        self.imagenes_template_optionemenu.configure(width=option_menu_width)
+        self.entry_widgets.append(self.imagenes_template_optionemenu)
+
+        #                        poner opcion de bolus de bolus, tto previo, alarmas
+        #                        NO SE ACTUALIZA EL PROTOCOLO POR DEFAULT SI CAMBIO EL TEMPLATE, DEBERIA CAMBIAR. ARREGLAR
+
+        # Boton Preview de template
+
+        self.main_button = customtkinter.CTkButton(master=self.presc_frame, 
+                                                     text='Previsualizar Prescripcion',
+                                                     border_width=3,
+                                                     text_color=("gray10", "#DCE4EE"), 
+                                                     #command=self.get_entries
+                                                     )
+        self.main_button.grid(row=8, column=0, columnspan=3, padx=20, pady=20)
+
         
 
 
-        # self.imagenes_template_optionemenu = customtkinter.CTkOptionMenu(master=self.tabview, 
-        #                                                                  values=imagenes_template, 
-        #                                                                  anchor='w')
-        # self.imagenes_template_optionemenu.grid(row=5, column=1, padx=20, pady=(10, 10), sticky=tk.W)
-        # self.entry_widgets.append(self.imagenes_template_optionemenu)
+        # Entrada para escribir breve oracion resumiendo el tratamiento
+        self.plan_entry = customtkinter.CTkEntry(master=self.presc_frame, placeholder_text="Describir aquí brevemente el esquema de tratamiento")
+        self.plan_entry.grid(row=3, column=0, columnspan=3, padx=20, pady=(10, 20), sticky="nsew")
+        self.entry_widgets.append(self.plan_entry)
 
 
 
@@ -240,8 +301,6 @@ class App(customtkinter.CTk):
 
         self.button_frame = customtkinter.CTkFrame(self, width=300, corner_radius=0)
         self.button_frame.grid(row=2, column=1, columnspan=3, padx=20, pady=20, sticky="ew")
-        self.presc_frame.grid_rowconfigure(0, weight=1)
-        self.presc_frame.grid_columnconfigure(0, weight=1, uniform="column")
 
         self.main_button = customtkinter.CTkButton(self.button_frame, 
                                                      text='Generar Prescripción',
