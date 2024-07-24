@@ -65,55 +65,65 @@ def open_pdf_with_chrome(pdf_path):
     # Run the command
     subprocess.run(command)
 
+def set_fonts():
+    font_path = os.path.dirname(os.path.abspath(__file__))+'/fonts/'
+
+    pdfmetrics.registerFont(TTFont('CourierNewRegular', resource_path(font_path+'courier_new_regular.ttf')))
+    pdfmetrics.registerFont(TTFont('CourierNewRegularBold', resource_path(font_path+'courier_new_regular-bold.ttf')))
+    pdfmetrics.registerFontFamily('CourierNewRegular', normal='CourierNewRegular', bold='CourierNewRegularBold')
+
+    pdfmetrics.registerFont(TTFont('Calibri', resource_path(font_path+'calibri.ttf')))
+    pdfmetrics.registerFont(TTFont('CalibriBold', resource_path(font_path+'calibri-bold.ttf')))
+    pdfmetrics.registerFontFamily('Calibri', normal='Calibri', bold='CalibriBold')
+
+def set_styles():
+    styles = getSampleStyleSheet()
+
+    styles.add(ParagraphStyle(name='Patient_data',
+                            fontFamily='Calibri',
+                            fontSize=9,
+                            spaceBefore=0.1*inch,
+                            spaceAfter=0.1*inch))
+
+    styles.add(ParagraphStyle(name='Conclusions',
+                            fontFamily='Calibri',
+                            fontSize=7,
+                            spaceBefore=0.1*inch,
+                            spaceAfter=0.1*inch))
+
+    styles.add(ParagraphStyle(name='PDFTitle',
+                            fontName='CalibriBold',
+                            fontSize=11,
+                            spaceBefore=0.1*inch,
+                            spaceAfter=0.1*inch))
+
+    styles.add(ParagraphStyle(name='Constraints',
+                            fontFamily='Calibri',
+                            fontSize=10,
+                            spaceBefore=0.1*inch,
+                            spaceAfter=0.1*inch))
+
+    styles.add(ParagraphStyle(name='comment',
+                            fontFamily='Calibri',
+                            fontSize=7,
+                            spaceBefore=0.1*inch,
+                            spaceAfter=0.1*inch))
+    
+    return styles
+
+    
 # %%
-# Import our font
 
-font_path = os.path.dirname(os.path.abspath(__file__))+'/fonts/'
-
-pdfmetrics.registerFont(TTFont('CourierNewRegular', resource_path(font_path+'courier_new_regular.ttf')))
-pdfmetrics.registerFont(TTFont('CourierNewRegularBold', resource_path(font_path+'courier_new_regular-bold.ttf')))
-pdfmetrics.registerFontFamily('CourierNewRegular', normal='CourierNewRegular', bold='CourierNewRegularBold')
-
-pdfmetrics.registerFont(TTFont('Calibri', resource_path(font_path+'calibri.ttf')))
-pdfmetrics.registerFont(TTFont('CalibriBold', resource_path(font_path+'calibri-bold.ttf')))
-pdfmetrics.registerFontFamily('Calibri', normal='Calibri', bold='CalibriBold')
 
 # Set the page height and width
 HEIGHT = 11.7 * inch
 WIDTH = 8.3 * inch
 
+# Import our font
+set_fonts()
+
 # Set our styles
-styles = getSampleStyleSheet()
-
-styles.add(ParagraphStyle(name='Patient_data',
-                          fontFamily='Calibri',
-                          fontSize=9,
-                          spaceBefore=0.1*inch,
-                          spaceAfter=0.1*inch))
-
-styles.add(ParagraphStyle(name='Conclusions',
-                          fontFamily='Calibri',
-                          fontSize=7,
-                          spaceBefore=0.1*inch,
-                          spaceAfter=0.1*inch))
-
-styles.add(ParagraphStyle(name='PDFTitle',
-                          fontName='CalibriBold',
-                          fontSize=10,
-                          spaceBefore=0.1*inch,
-                          spaceAfter=0.1*inch))
-
-styles.add(ParagraphStyle(name='Constraints',
-                          fontFamily='Calibri',
-                          fontSize=10,
-                          spaceBefore=0.1*inch,
-                          spaceAfter=0.1*inch))
-
-styles.add(ParagraphStyle(name='comment',
-                          fontFamily='Calibri',
-                          fontSize=7,
-                          spaceBefore=0.1*inch,
-                          spaceAfter=0.1*inch))
+styles = set_styles()
 
 # -------------------------------------------------------------------------------------------------------------------------
 
@@ -137,51 +147,57 @@ def format_preprocessing(targets_chart, constraints_chart):
             aux = []
             aux.append(constraint_line[0]) if constraint_line[0]!='None' else aux.append('')
             if constraint_line[1] == 'V(D)>V_%':
-                aux.append('V('+constraint_line[2]+'cGy)'+' > '+constraint_line[3]+'%')
+                aux.append('V('+constraint_line[2]+' cGy)'+' > '+constraint_line[3]+' %')
                 if constraint_line[4] != 'None': 
-                    aux.append('V('+constraint_line[4]+'cGy)'+' > '+constraint_line[5]+'%')
-                else:
-                    aux.append('')
-            elif constraint_line[1] == 'V(D)>V_cc':
-                aux.append('V('+constraint_line[2]+'cGy)'+' > '+constraint_line[3]+'cc')
-                if constraint_line[4] != 'None': 
-                    aux.append('V('+constraint_line[4]+'cGy)'+' > '+constraint_line[5]+'cc')
+                    aux.append('V('+constraint_line[4]+' cGy)'+' > '+constraint_line[5]+' %')
                 else:
                     aux.append('')
             elif constraint_line[1] == 'V(D)<V_%':
-                aux.append('V('+constraint_line[2]+'cGy)'+' < '+constraint_line[3]+'%')
+                aux.append('V('+constraint_line[2]+' cGy)'+' < '+constraint_line[3]+' %')
                 if constraint_line[4] != 'None': 
-                    aux.append('V('+constraint_line[4]+'cGy)'+' < '+constraint_line[5]+'%')
+                    aux.append('V('+constraint_line[4]+' cGy)'+' < '+constraint_line[5]+' %')
                 else:
                     aux.append('')
             elif constraint_line[1] == 'V(D)<V_cc':
-                aux.append('V('+constraint_line[2]+'cGy)'+' < '+constraint_line[3]+'cc')
+                aux.append('V('+constraint_line[2]+' cGy)'+' < '+constraint_line[3]+' cc')
                 if constraint_line[4] != 'None': 
-                    aux.append('V('+constraint_line[4]+'cGy)'+' < '+constraint_line[5]+'cc')
+                    aux.append('V('+constraint_line[4]+' cGy)'+' < '+constraint_line[5]+' cc')
                 else:
                     aux.append('')
             elif constraint_line[1] == 'D(V_%)<D':
-                aux.append('V('+constraint_line[2]+'%)'+' < '+constraint_line[3]+'cGy')
+                aux.append('V('+constraint_line[2]+' %)'+' < '+constraint_line[3]+' cGy')
                 if constraint_line[4] != 'None': 
-                    aux.append('V('+constraint_line[4]+'%)'+' < '+constraint_line[5]+'cGy')
+                    aux.append('V('+constraint_line[4]+' %)'+' < '+constraint_line[5]+' cGy')
                 else:
                     aux.append('')
             elif constraint_line[1] == 'D(V_cc)<D':
-                aux.append('V('+constraint_line[2]+'cc)'+' < '+constraint_line[3]+'cGy')
+                aux.append('V('+constraint_line[2]+' cc)'+' < '+constraint_line[3]+' cGy')
                 if constraint_line[4] != 'None': 
-                    aux.append('V('+constraint_line[4]+'cc)'+' < '+constraint_line[5]+'cGy')
+                    aux.append('V('+constraint_line[4]+' cc)'+' < '+constraint_line[5]+' cGy')
                 else:
                     aux.append('')
             elif constraint_line[1] == 'Dmedia':
-                aux.append('Dmed = '+constraint_line[2]+'cGy')
+                aux.append('Dmed < '+constraint_line[2]+' cGy')
                 if constraint_line[4] != 'None': 
-                    aux.append('Dmed = '+constraint_line[4]+'cGy')
+                    aux.append('Dmed < '+constraint_line[4]+' cGy')
                 else:
                     aux.append('')
             elif constraint_line[1] == 'Dmax':
-                aux.append('Dmax < '+constraint_line[2]+'cGy')
+                aux.append('Dmax < '+constraint_line[2]+' cGy')
                 if constraint_line[4] != 'None': 
-                    aux.append('Dmax < '+constraint_line[4]+'cGy')
+                    aux.append('Dmax < '+constraint_line[4]+' cGy')
+                else:
+                    aux.append('')
+            elif constraint_line[1] == 'D(V_%)>D':
+                aux.append('D('+constraint_line[2]+' %)'+' > '+constraint_line[3]+' cGy')
+                if constraint_line[4] != 'None': 
+                    aux.append('D('+constraint_line[4]+' %)'+' > '+constraint_line[5]+' cGy')
+                else:
+                    aux.append('')
+            elif constraint_line[1] == 'D(V_cc)>D':
+                aux.append('D('+constraint_line[2]+' cc)'+' > '+constraint_line[3]+' cGy')
+                if constraint_line[4] != 'None': 
+                    aux.append('D('+constraint_line[4]+' cc)'+' > '+constraint_line[5]+' cGy')
                 else:
                     aux.append('')
             reformated_constraints_chart.append(aux)
@@ -215,7 +231,7 @@ def patient_data_splitter(story, patient_data_dict):
     
     content = []
     for (key1, value1), (key2, value2) in zip(first_part,second_part):
-        content.append([key1,value1,key2,value2])
+        content.append([key1.upper(),value1,key2.upper(),value2])
 
     content_table = Table(
         content,
@@ -279,10 +295,10 @@ def myPageWrapper(institution_contact, watermark_path):
 
         canvas.setFont('Calibri', 8)  # sets the font for contact
 
-        canvas.drawRightString(
-            WIDTH - (.4 * inch),
-            .4 * inch,  # draw the website at the bottom right of the page
-            institution_contact['website'])
+        # canvas.drawRightString(
+        #     WIDTH - (.4 * inch),
+        #     .4 * inch,  # draw the website at the bottom right of the page
+        #     institution_contact['website'])
 
         canvas.setLineWidth(2)
         canvas.setStrokeColorRGB(0, 0, 0)
@@ -313,7 +329,7 @@ def generate_print_pdf(pdfname, institution_contact, image_path, watermark_path,
     doc = SimpleDocTemplate(
         pdfname,
         pagesize=A4,
-        bottomMargin=0.3 * inch,
+        bottomMargin=0.1 * inch,
         topMargin=0.1 * inch,
         rightMargin=.3 * inch,
         leftMargin=.3 * inch
@@ -347,11 +363,13 @@ def generate_print_pdf(pdfname, institution_contact, image_path, watermark_path,
     presc_title = Paragraph('PRESCRIPCIÓN DE RADIOTERAPIA', styles['PDFTitle']) 
     story.append(presc_title)
 
-    tto_text = Paragraph(prescription_dict['Plan de Tratamiento']+
-                         '  -  Prescripción: '+prescription_dict['Prescripci\u00f3n']+
-                         '  -  Técnica: '+prescription_dict['T\u00e9cnica'], 
+    tto_text1 = Paragraph(prescription_dict['Plan de Tratamiento'], styles['Conclusions'])
+    story.append(tto_text1)
+    tto_text2 = Paragraph('Prescripción: '+prescription_dict['Prescripci\u00f3n']+
+                         '  -  Técnica: '+prescription_dict['T\u00e9cnica']+
+                         '  -  Intención: '+prescription_dict['Intenci\u00f3n'], 
                          styles['Conclusions'])
-    story.append(tto_text)
+    story.append(tto_text2)
 
     targets_chart, constraints_chart = format_preprocessing(targets_chart, constraints_chart)
 
@@ -402,20 +420,39 @@ def generate_print_pdf(pdfname, institution_contact, image_path, watermark_path,
     constraints_table.setStyle(style)
     story.append(constraints_table)
 
-    #COMENTARIO
-    comment_title = Paragraph('En (*) figuran las restricciones propuestas por el servicio de Radioterapia de INTECNUS.', 
-                              styles['comment']) 
-    story.append(comment_title)
-
     #IMAGENES
     presc_title = Paragraph('PROTOCOLO DE IMÁGENES: '+prescription_dict['Protocolo de Im\u00e1genes'], styles['PDFTitle']) 
     story.append(presc_title)
+
+    #OBSERVACIONES
+    alert_keys = ['Tratamiento Previo',
+                'Dias Alternos',
+                'Bolus',
+                'Hipoacusia',
+                'Enf. Infecciosa',
+                'Discapacidad Motora',
+                'Patología psiquiátrica/cognitiva']
+
+    alert_string = ' - '.join([key for key in alert_keys if prescription_dict[key] != 0])
+
+    if prescription_dict['Bolus'] == 0:
+        alert_string.replace('Bolus','')
+    if prescription_dict['Bolus'] == 1:
+        alert_string.replace('Bolus','Tratamiento c/Bolus')
+    elif prescription_dict['Bolus'] == 2:
+        alert_string.replace('Bolus','50% Tratamiento c/Bolus')
+    
+    obs_title = Paragraph(f"OBSERVACIONES: {prescription_dict['Nota de Observaciones']} - {alert_string}", styles['PDFTitle']) 
+    story.append(obs_title)
 
     doc.build(story, onFirstPage=myPageWrapper(institution_contact, watermark_path))
 
     return pdfname
 
 def calculate_age(birthday):
+    if birthday == '' or not isinstance(birthday, str):
+        return ''
+    
     accepted_formats = ["%Y-%m-%d", "%d-%m-%Y", "%d/%m/%Y"]
 
     for format_str in accepted_formats:
@@ -431,6 +468,15 @@ def calculate_age(birthday):
     age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
     return age
 
+def raw_importer(contraints_excel_filepath, presc_template_name):
+    excel_data = xlstools.cell_data_importer(open_workbook(contraints_excel_filepath, presc_template_name),
+                                               (4,'A'), 
+                                               (45,'G'))
+    
+    targets_chart, constraints_chart = xlstools.none_based_data_parser(excel_data)
+
+    return targets_chart, constraints_chart
+
 def prescription_importer(frontend_data, contraints_excel_filepath):
     # Datos de paciente
     #Agrego edad a la fecha de la precripcion
@@ -439,19 +485,25 @@ def prescription_importer(frontend_data, contraints_excel_filepath):
     # Importacion de datos de template de prescripcion de excel de constraints
     prescription_keys = ['Conclusiones', 
                          'Plan de Tratamiento', 
+                         'Intenci\u00f3n', 
                          'T\u00e9cnica',
                          'Prescripci\u00f3n',
-                         'Protocolo de Im\u00e1genes']
+                         'Protocolo de Im\u00e1genes',
+                         'Nota de Observaciones', 
+                         'Tratamiento Previo',
+                         'Dias Alternos', 
+                         'Bolus', 
+                         'Hipoacusia', 
+                         'Enf. Infecciosa', 
+                         'Discapacidad Motora',
+                         'Patología psiquiátrica/cognitiva' 
+                         ]
 
     prescription_dict = {key: frontend_data.pop(key) for key in prescription_keys if key in frontend_data}
 
     #Separo prescription_dict de patient_data_dict
     patient_data_dict = [[key, value] for key,value in frontend_data.items()]
 
-    excel_data = xlstools.cell_data_importer(open_workbook(contraints_excel_filepath, prescription_dict['Prescripci\u00f3n']),
-                                               (4,'A'), 
-                                               (45,'G'))
-
-    targets_chart, constraints_chart = xlstools.none_based_data_parser(excel_data)
+    targets_chart, constraints_chart = raw_importer(contraints_excel_filepath, prescription_dict['Prescripci\u00f3n'])
 
     return patient_data_dict, prescription_dict, targets_chart, constraints_chart
