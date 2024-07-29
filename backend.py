@@ -93,7 +93,7 @@ def set_styles():
 
     styles.add(ParagraphStyle(name='PDFTitle',
                             fontName='CalibriBold',
-                            fontSize=11,
+                            fontSize=12,
                             spaceBefore=0.1*inch,
                             spaceAfter=0.1*inch))
 

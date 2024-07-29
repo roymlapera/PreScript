@@ -180,7 +180,7 @@ class App(customtkinter.CTk):
         # -------------------------------------------------
 
         # Eleccion del template de prescripcion
-        self.presc_templates = xlstools.get_cell_content(file_path=self.contraints_excel_filepath, cell_coordinate='B2', sheet_name=None)[2:]
+        self.presc_templates = xlstools.get_cell_content(file_path=self.contraints_excel_filepath, cell_coordinate='B2', sheet_name=None)[3:]
 
         self.presc_menu, self.chosen_presc_template = self._create_dropdown_menu(self.presc_frame, 
                                                                                  'Template de Prescripción', 
@@ -352,14 +352,21 @@ class App(customtkinter.CTk):
         self.actual_presc_data_df = pd.DataFrame(actual_presc_data[1:], columns=actual_presc_data[0])
 
     def get_images_template_based_on_presc_template(self, presc_template):
-        # Implement your logic here to determine the new default value for images_menu
-        # based on the chosen presc_template
-        # For now, we'll just return the first image template as default
-        return self.images_templates[0] if self.images_templates else ""
-    
+        if not hasattr(self, 'default_images_dict'):
+            keys = self.presc_templates
+            values = xlstools.get_cell_content(file_path=self.contraints_excel_filepath, cell_coordinate='G5', sheet_name=None)[3:]
+            try:
+                if len(keys) != len(values):
+                    raise ValueError("The length of keys and values lists must be equal.")
+                self.default_images_dict = dict(zip(keys, values))
+            except ValueError as e:
+                print(f"Error: {e}")
+
+        return self.default_images_dict[presc_template]
+
     def preview(self):
         self.presc_template = self.chosen_presc_template.get()
-        self.update_presc_data()  #se actualiza self.actual_presc_data
+        self.update_presc_data()  # se actualiza self.actual_presc_data
 
         self.preview_window = customtkinter.CTkToplevel(self)
         self.preview_window.title("Dosis prescripta del Template seleccionado")
@@ -372,23 +379,29 @@ class App(customtkinter.CTk):
         self.preview_label = customtkinter.CTkLabel(self.preview_window, font=customtkinter.CTkFont(size=25, weight="bold"), text="Dosis Prescriptas:")
         self.preview_label.grid(row=0, column=0, padx=20, pady=20, sticky=tk.W)
 
-        # Crear un Frame para organizar los elementos
+        # Crear un Frame para el Treeview
         self.pv_frame = customtkinter.CTkFrame(self.preview_window, width=560)
-        self.pv_frame.grid(row=1, column=0, padx=20, pady=(0, 20), sticky="ew")
-
-        # Convertir el DataFrame a una cadena formateada
-        df_str = self.actual_presc_data_df.to_string(index=False)
-
-        # Crear un widget CTkLabel para mostrar el DataFrame
-        label_widget = customtkinter.CTkLabel(self.preview_window, text=df_str, font=customtkinter.CTkFont(size=20), anchor='w', justify='left')
-        label_widget.grid(row=1, column=0, padx=20, pady=20, sticky="nsew")
+        self.pv_frame.grid(row=1, column=0, padx=20, pady=(0, 20), sticky="nsew")
 
         # Configurar el frame para expandirse correctamente
         self.preview_window.grid_rowconfigure(1, weight=1)
         self.preview_window.grid_columnconfigure(0, weight=1)
 
-        # Iniciar el bucle principal de la aplicación
-        self.preview_window.mainloop()
+        # Crear un Treeview dentro del Frame de customtkinter
+        columns = list(self.actual_presc_data_df.columns)
+        self.tree = ttk.Treeview(self.pv_frame, columns=columns, show='headings')
+        self.tree.grid(row=0, column=0, sticky='nsew')
+
+        # Configurar las columnas
+        for col in columns:
+            self.tree.heading(col, text=col)
+            self.tree.column(col, width=100, anchor='center')  # Establece un ancho fijo para las columnas
+
+        # Insertar los datos del DataFrame en el Treeview
+        for index, row in self.actual_presc_data_df.iterrows():
+            self.tree.insert("", "end", values=list(row))
+
+
 
     def _create_dropdown_menu(self, frame, text, options, row, column, width=250, padx=20, pady=10, sticky=tk.W, callback=None):
         dropdown_label = customtkinter.CTkLabel(master=frame, text=text, anchor="w")
