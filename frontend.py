@@ -107,7 +107,16 @@ class App(customtkinter.CTk):
         self.datos_label.grid(row=0, column=0, columnspan=2, padx=20, pady=20, sticky="ew")
 
         # Entradas para los datos del paciente
-        self.patient_labels = ['HC','Apellido','Nombres','Documento','Fecha de Admisión','Fecha de Nacimiento','Ciudad/País','Obra Social', 'Médico Derivante', 'Guía utilizada']
+        self.patient_labels = ['HC',
+                               'Apellido',
+                               'Nombres',
+                               'Documento',
+                               'Fecha de nacimiento',
+                               'Ciudad/País',
+                               'Fecha de admisión',
+                               'Obra social', 
+                               'Médico derivante', 
+                               'Guía utilizada']
 
         self.data = {}
         self.entry_widgets = []
@@ -166,7 +175,7 @@ class App(customtkinter.CTk):
         self.plan_entry.grid(row=3, column=0, columnspan=3, padx=10, pady=(10, 10), sticky="nsew")
 
         # Eleccion de la tecnica de tratamiento
-        self.technique_options = ['3D','IMRT', 'VMAT', 'SBRT', 'SRS', 'A definir por Física']
+        self.technique_options = ['3D','IMRT', 'VMAT', 'SBRT', 'SRS', 'A definir según planificación']
         
         self.technique_menu, self.chosen_technique = self._create_dropdown_menu(self.presc_frame,"Técnica de Tratamiento", self.technique_options, row=4, column=0)
         self.technique = self.chosen_technique.get()
@@ -251,7 +260,14 @@ class App(customtkinter.CTk):
         self.alerts_label = customtkinter.CTkLabel(master=self.options_frame, text='Alertas', font=customtkinter.CTkFont(size=12), anchor="w")
         self.alerts_label.grid(row=2, column=0, padx=padx_observaciones, pady=2*pady_observaciones)
 
-        self.alerts_options = ['Patología psiquiátrica/cognitiva', 'Discapacidad motora', 'Hipoacusia', 'Enf. Infecciosa']
+        self.alerts_options = ['Hipoacusia', 
+                               'Enf. infecciosa', 
+                               'Discap. Motora',
+                               'Patol. psiq./cognitiva', 
+                               'Marcapasos', 
+                               'Reirradiación misma zona'
+                               ]
+        
         self.checkbox_list = []
         for i, option in enumerate(self.alerts_options):
             checkbox = customtkinter.CTkCheckBox(master=self.options_frame, text=option)
@@ -278,6 +294,10 @@ class App(customtkinter.CTk):
 
     def quit(self):
         for key,value in self.data.items(): print(f'{key}: {value}')
+        
+
+
+
 
     def get_entries(self):
         self.entry_widgets.append(self.plan_entry)
@@ -304,18 +324,14 @@ class App(customtkinter.CTk):
                                                      'Nota de Observaciones', 
                                                      'Tratamiento Previo',
                                                      'Dias Alternos', 
-                                                     'Bolus', 
-                                                     'Hipoacusia', 
-                                                     'Enf. Infecciosa', 
-                                                     'Discapacidad Motora',
-                                                     'Patología psiquiátrica/cognitiva' 
-                                                     ]
+                                                     'Bolus'] + self.alerts_options
+                                                     
         self.data = dict(zip(self.patient_labels, entries))
         
-        # for key,value in self.data.items():
-        #     print(f'{key:30}{value}')
+        for key,value in self.data.items():
+            print(f'{key:30}{value}')
 
-        # with open('my_dict.json', 'w') as f:
+        # with open('data.json', 'w') as f:
         #     json.dump(self.data, f)
 
         self.destroy()

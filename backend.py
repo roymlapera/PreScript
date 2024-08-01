@@ -165,15 +165,15 @@ def format_preprocessing(targets_chart, constraints_chart):
                 else:
                     aux.append('')
             elif constraint_line[1] == 'D(V_%)<D':
-                aux.append('V('+constraint_line[2]+' %)'+' < '+constraint_line[3]+' cGy')
+                aux.append('D('+constraint_line[2]+' %)'+' < '+constraint_line[3]+' cGy')
                 if constraint_line[4] != 'None': 
-                    aux.append('V('+constraint_line[4]+' %)'+' < '+constraint_line[5]+' cGy')
+                    aux.append('D('+constraint_line[4]+' %)'+' < '+constraint_line[5]+' cGy')
                 else:
                     aux.append('')
             elif constraint_line[1] == 'D(V_cc)<D':
-                aux.append('V('+constraint_line[2]+' cc)'+' < '+constraint_line[3]+' cGy')
+                aux.append('D('+constraint_line[2]+' cc)'+' < '+constraint_line[3]+' cGy')
                 if constraint_line[4] != 'None': 
-                    aux.append('V('+constraint_line[4]+' cc)'+' < '+constraint_line[5]+' cGy')
+                    aux.append('D('+constraint_line[4]+' cc)'+' < '+constraint_line[5]+' cGy')
                 else:
                     aux.append('')
             elif constraint_line[1] == 'Dmedia':
@@ -219,15 +219,17 @@ def patient_data_splitter(story, patient_data_dict):
 
     # Split the dictionary into two parts
     nro_lines = len(patient_data_dict)
-
+    
     # Split the dictionary into two parts
     if nro_lines%2 != 0:
         patient_data_dict.append(['', ''])
 
-    half_length = len(patient_data_dict) // 2
+    items = list(patient_data_dict.items())
+    half_length = len(items) // 2
     
-    first_part = patient_data_dict[:half_length]
-    second_part = patient_data_dict[half_length:]
+    # Split the items at the midpoint
+    first_part = items[:half_length]
+    second_part = items[half_length:]
     
     content = []
     for (key1, value1), (key2, value2) in zip(first_part,second_part):
@@ -367,7 +369,8 @@ def generate_print_pdf(pdfname, institution_contact, image_path, watermark_path,
     story.append(tto_text1)
     tto_text2 = Paragraph('Prescripción: '+prescription_dict['Prescripci\u00f3n']+
                          '  -  Técnica: '+prescription_dict['T\u00e9cnica']+
-                         '  -  Intención: '+prescription_dict['Intenci\u00f3n'], 
+                         '  -  Intención: '+prescription_dict['Intenci\u00f3n']+
+                         '  -  Guía utilizada: '+prescription_dict['Guía utilizada'], 
                          styles['Conclusions'])
     story.append(tto_text2)
 
@@ -425,22 +428,17 @@ def generate_print_pdf(pdfname, institution_contact, image_path, watermark_path,
     story.append(presc_title)
 
     #OBSERVACIONES
-    alert_keys = ['Tratamiento Previo',
-                'Dias Alternos',
-                'Bolus',
-                'Hipoacusia',
-                'Enf. Infecciosa',
-                'Discapacidad Motora',
-                'Patología psiquiátrica/cognitiva']
+    _ , alert_dict = split_dict_by_key(prescription_dict, 'Tratamiento Previo')
+    alert_keys = list(alert_dict.keys())
 
     alert_string = ' - '.join([key for key in alert_keys if prescription_dict[key] != 0])
 
     if prescription_dict['Bolus'] == 0:
-        alert_string.replace('Bolus','')
+        alert_string = alert_string.replace('Bolus','')
     if prescription_dict['Bolus'] == 1:
-        alert_string.replace('Bolus','Tratamiento c/Bolus')
+        alert_string = alert_string.replace('Bolus','Tratamiento c/Bolus')
     elif prescription_dict['Bolus'] == 2:
-        alert_string.replace('Bolus','50% Tratamiento c/Bolus')
+        alert_string = alert_string.replace('Bolus','50% Tratamiento c/Bolus')
     
     obs_title = Paragraph(f"OBSERVACIONES: {prescription_dict['Nota de Observaciones']} - {alert_string}", styles['PDFTitle']) 
     story.append(obs_title)
@@ -477,32 +475,38 @@ def raw_importer(contraints_excel_filepath, presc_template_name):
 
     return targets_chart, constraints_chart
 
+def split_dict_by_key(input_dict, split_key):
+    if split_key not in input_dict:
+        raise ValueError(f"Key '{split_key}' not found in the dictionary.")
+    
+    keys = list(input_dict.keys())
+    split_index = keys.index(split_key)
+    
+    before_split = {k: input_dict[k] for k in keys[:split_index]}
+    after_split = {k: input_dict[k] for k in keys[split_index:]}
+    
+    return before_split, after_split
+
+def move_item_to_end(input_dict, key_to_move):
+    if key_to_move not in input_dict:
+        raise KeyError(f"Key '{key_to_move}' not found in the dictionary.")
+    
+    value = input_dict.pop(key_to_move)
+    input_dict[key_to_move] = value
+
 def prescription_importer(frontend_data, contraints_excel_filepath):
-    # Datos de paciente
-    #Agrego edad a la fecha de la precripcion
-    frontend_data['Edad'] = str(calculate_age(frontend_data['Fecha de Nacimiento']))
-
-    # Importacion de datos de template de prescripcion de excel de constraints
-    prescription_keys = ['Conclusiones', 
-                         'Plan de Tratamiento', 
-                         'Intenci\u00f3n', 
-                         'T\u00e9cnica',
-                         'Prescripci\u00f3n',
-                         'Protocolo de Im\u00e1genes',
-                         'Nota de Observaciones', 
-                         'Tratamiento Previo',
-                         'Dias Alternos', 
-                         'Bolus', 
-                         'Hipoacusia', 
-                         'Enf. Infecciosa', 
-                         'Discapacidad Motora',
-                         'Patología psiquiátrica/cognitiva' 
-                         ]
-
-    prescription_dict = {key: frontend_data.pop(key) for key in prescription_keys if key in frontend_data}
 
     #Separo prescription_dict de patient_data_dict
-    patient_data_dict = [[key, value] for key,value in frontend_data.items()]
+    patient_data_dict, prescription_dict = split_dict_by_key(frontend_data, 'Guía utilizada')
+
+    #Agrego edad
+    birthday_key = 'Fecha de nacimiento'
+    age_key = 'Edad'
+    patient_data_dict[age_key] = str(calculate_age(patient_data_dict[birthday_key]))
+
+    #Reordeno las key en el orden que me gusta
+    keys_to_move = ['Ciudad/País', 'Fecha de admisión', 'Obra social', 'Médico derivante']
+    [move_item_to_end(patient_data_dict, key_to_move) for key_to_move in keys_to_move]
 
     targets_chart, constraints_chart = raw_importer(contraints_excel_filepath, prescription_dict['Prescripci\u00f3n'])
 
