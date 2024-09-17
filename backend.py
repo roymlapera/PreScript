@@ -8,14 +8,11 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.enums import TA_RIGHT, TA_JUSTIFY
 from reportlab.lib import utils
 
-from itertools import product
-import json
 import subprocess
 import platform
 import xlstools
 from xlstools import open_workbook
 from datetime import datetime
-import math
 import sys
 import os
 
@@ -246,13 +243,13 @@ def patient_data_splitter(story, patient_data_dict):
 
 def constraints_chart_splitter(constraints_chart):
     # Apply styles to tables
-    tbl_style = TableStyle([
-        ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
-        ('FONT', (0, 0), (-1, -1), 'Calibri'),
-        ('FONTSIZE', (0, 0), (-1, -1), 9),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT')
-    ])
+    # tbl_style = TableStyle([
+    #     ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+    #     ('FONT', (0, 0), (-1, -1), 'Calibri'),
+    #     ('FONTSIZE', (0, 0), (-1, -1), 9),
+    #     ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+    #     ('ALIGN', (0, 0), (-1, -1), 'LEFT')
+    # ])
 
     # constraints_chart.pop()
     nro_constraint_lines = len(constraints_chart) - 1
@@ -415,9 +412,10 @@ def generate_print_pdf(pdfname, institution_contact, image_path, watermark_path,
     for i in range(0, len(constraints_chart)):
         constraints_table._argH[i] = 13
 
-    if len(constraints_chart[0])>3:
-        grey_color = (0.8, 0.8, 0.8)  # RGB values for grey color
-        style.add('BACKGROUND', (0, 0), (0, -1), grey_color)    #columna 0
+    # Structure background color gray
+    grey_color = (0.8, 0.8, 0.8)  # RGB values for grey color
+    style.add('BACKGROUND', (0, 0), (0, -1), grey_color)    #columna 0
+    if len(constraints_chart[0])>3:   # contempla el caso en que se hizo split de columnas
         style.add('BACKGROUND', (3, 0), (3, -1), grey_color)    #columna 3
 
     constraints_table.setStyle(style)

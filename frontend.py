@@ -4,11 +4,8 @@ from tkinter import ttk
 import customtkinter
 from PIL import Image, ImageTk
 import openpyxl
-import numpy as np
 import xlstools
 import pandas as pd
-
-import json
 
 from backend import raw_importer
 
@@ -295,10 +292,6 @@ class App(customtkinter.CTk):
     def quit(self):
         for key,value in self.data.items(): print(f'{key}: {value}')
         
-
-
-
-
     def get_entries(self):
         self.entry_widgets.append(self.plan_entry)
         self.entry_widgets.append(self.chosen_technique)

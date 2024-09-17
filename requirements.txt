@@ -1,6 +1,0 @@
-reportlab
-xlstools
-openpyxl
-Pillow
-customtkinter
-numpy
