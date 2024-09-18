@@ -33,7 +33,7 @@ def filename_creator(save_path ,patient_data_dict, prescription_dict):
 def main():
     # --------------------------------------------------------------------------------------------
 
-    DEVELOP_MODE = False
+    DEVELOP_MODE = True
     FRONTEND_QA_MODE = False
     BACKEND_QA_MODE = False
 
@@ -60,7 +60,6 @@ def main():
 
     path = os.path.abspath('').replace('\\', '/')
     images_path = path + '/images/'
-    protocols_path = path + '/protocols/'
 
     header_path = resource_path(images_path + 'CALIDAD.png')
 
@@ -68,7 +67,8 @@ def main():
 
     watermark_path = resource_path(images_path + 'marca_agua.png')
 
-    contraints_excel_filepath = resource_path(protocols_path + 'Protocolo de constraints.xlsx')
+    # Reemplazar con path a Excel de contraints actualizado
+    contraints_excel_filepath = resource_path('//FS-201-Radioterapia.intecnus.org.ar/fisicos/8 - Físicos Médicos/Natalia Espector/2024 - Protocolos clínicos/Protocolo de Constraints.xlsx')
 
     # --------------------------------------------------------------------------------------------
 
