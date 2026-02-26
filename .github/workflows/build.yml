@@ -29,10 +29,10 @@ jobs:
         
     - name: Build with PyInstaller
       run: |
-        pyinstaller --onefile --windowed --icon=icon.ico --add-data "images;images" monaco_bot_debug3.py --name Monaco_Bot
+        pyinstaller --onefile --add-data "fonts;fonts" --add-data "images;images" --add-data "protocols;protocols" --clean --noconsole --hidden-import=frontend.py --hidden-import=backend.py --hidden-import=xlstools.py --icon=icon.ico PreScript.py
         
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Monaco_Bot_${{ matrix.os }}_Python${{ matrix.python-version }}
-        path: dist/Monaco_Bot.exe
+        name: PreScript_${{ matrix.os }}_Python${{ matrix.python-version }}
+        path: dist/PreScript.exe
