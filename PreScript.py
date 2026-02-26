@@ -33,7 +33,7 @@ def filename_creator(save_path ,patient_data_dict, prescription_dict):
 def main():
     # --------------------------------------------------------------------------------------------
 
-    DEVELOP_MODE = True
+    DEVELOP_MODE = False
     FRONTEND_QA_MODE = False
     BACKEND_QA_MODE = False
 
