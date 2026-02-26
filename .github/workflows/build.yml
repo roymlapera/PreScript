@@ -1,0 +1,38 @@
+name: Build Monaco Bot EXE
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [windows-2022]
+        python-version: ['3.11']
+    
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+    - uses: actions/checkout@v4
+      
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller opencv-python-headless numpy Pillow pywinauto
+        
+    - name: Build with PyInstaller
+      run: |
+        pyinstaller --onefile --windowed --icon=icon.ico --add-data "images;images" monaco_bot_debug3.py --name Monaco_Bot
+        
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Monaco_Bot_${{ matrix.os }}_Python${{ matrix.python-version }}
+        path: dist/Monaco_Bot.exe
