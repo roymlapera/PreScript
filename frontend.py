@@ -112,7 +112,7 @@ class App(customtkinter.CTk):
                                'Ciudad/País',
                                'Fecha de admisión',
                                'Obra social', 
-                               'Médico derivante', 
+                               'Medico derivante', 
                                'Guía utilizada']
 
         self.data = {}
@@ -271,17 +271,26 @@ class App(customtkinter.CTk):
             checkbox.grid(row=2, column=i+1, padx=padx_observaciones, pady=pady_observaciones, sticky="w") 
             self.checkbox_list.append(checkbox)
 
-        # ---------------------------------------- Boton Generar Prescripcion ---------------------------------------
+        # ---------------------------------------- Bottom Frame ---------------------------------------
 
-        self.button_frame = customtkinter.CTkFrame(self, corner_radius=0)
-        self.button_frame.grid(row=2, column=1, columnspan=4, padx=20, pady=10, sticky="ew")
+        self.bottom_frame = customtkinter.CTkFrame(self, corner_radius=0)
+        self.bottom_frame.grid(row=2, column=1, columnspan=4, padx=20, pady=10, sticky="ew")
 
-        self.main_button = customtkinter.CTkButton(self.button_frame, 
+        # ---------------------------------------- Menu Medico ---------------------------------------
+
+        self.physician_options = ['Romina Ventimiglia', 'Agostina Villegas', 'Laura Bergamin']
+
+        self.physician_menu, self.chosen_physician = self._create_dropdown_menu(self.bottom_frame,"Medico Tratante", self.physician_options, row=0, column=0)
+        self.physician = self.chosen_physician.get()
+
+        # ---------------------------------- Boton Generar Prescripcion ---------------------------------------
+
+        self.main_button = customtkinter.CTkButton(self.bottom_frame, 
                                                      text='Generar Prescripción',
                                                      border_width=3,
                                                      text_color=("gray10", "#DCE4EE"), 
                                                      command=self.get_entries)
-        self.main_button.grid(row=0, column=1, columnspan=2, padx=20, pady=10, sticky='ew')
+        self.main_button.grid(row=0, column=3, columnspan=1, padx=20, pady=10, sticky='W')
 
         # ****************************************************************************************************************
 
@@ -298,6 +307,7 @@ class App(customtkinter.CTk):
         self.entry_widgets.append(self.chosen_intention)
         self.entry_widgets.append(self.chosen_presc_template)
         self.entry_widgets.append(self.chosen_images_template)
+        self.entry_widgets.append(self.chosen_physician)
         
         self.entry_widgets.append(self.obs_entry)
         self.entry_widgets.append(self.prevous_treat_checkbox)
@@ -305,6 +315,8 @@ class App(customtkinter.CTk):
         self.entry_widgets.append(self.bolus_var)
         for check_box in enumerate(self.checkbox_list):
             self.entry_widgets.append(check_box[1])
+        
+        
 
         entries = [entry.get() if not isinstance(entry, customtkinter.CTkTextbox) else entry.get("1.0",'end-1c') for entry in self.entry_widgets]
 
@@ -314,6 +326,7 @@ class App(customtkinter.CTk):
                                                      'Intención', 
                                                      'Prescripción', 
                                                      'Protocolo de Imágenes', 
+                                                     'Medico Tratante',
                                                      'Nota de Observaciones', 
                                                      'Tratamiento Previo',
                                                      'Dias Alternos', 

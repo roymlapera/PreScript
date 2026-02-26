@@ -242,17 +242,10 @@ def patient_data_splitter(story, patient_data_dict):
     story.append(content_table)
 
 def constraints_chart_splitter(constraints_chart):
-    # Apply styles to tables
-    # tbl_style = TableStyle([
-    #     ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
-    #     ('FONT', (0, 0), (-1, -1), 'Calibri'),
-    #     ('FONTSIZE', (0, 0), (-1, -1), 9),
-    #     ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-    #     ('ALIGN', (0, 0), (-1, -1), 'LEFT')
-    # ])
+    print('Sin splittear:')
+    for line in constraints_chart: print(line)
 
-    # constraints_chart.pop()
-    nro_constraint_lines = len(constraints_chart) - 1
+    nro_constraint_lines = len(constraints_chart) - 1   #constraints sin titulo
 
     if nro_constraint_lines < 10:
         return constraints_chart
@@ -260,24 +253,34 @@ def constraints_chart_splitter(constraints_chart):
         # Split the dictionary into two parts
         title = constraints_chart.pop(0)
 
-        if nro_constraint_lines%2 != 0:
-            constraints_chart.append(['', '', ''])
+        print(nro_constraint_lines)
 
-        half_length = nro_constraint_lines // 2
+        if nro_constraint_lines%2 == 1:
+            constraints_chart.append([' ', ' ', ' '])
+            half_length = nro_constraint_lines // 2 + 1
+        else:
+            half_length = nro_constraint_lines // 2
         
         first_part = constraints_chart[:half_length]
         second_part = constraints_chart[half_length:]
 
         first_part.insert(0,title)
         second_part.insert(0,title)
+
+        for line in first_part: print(line)
+        print('\n')
+        for line in second_part: print(line)
         
         content = []
         for (value1, value2, value3), (value4, value5, value6) in zip(first_part,second_part):
             content.append([value1, value2, value3, value4, value5, value6])
 
+        print('Splitteado:')
+        for line in content: print(line)
+
         return content
 
-def myPageWrapper(institution_contact, watermark_path):
+def myPageWrapper(assigned_physician, license, watermark_path):
     # template for static, non-flowables, on the first page
     # draws all of the contact information at the bottom of the page
     def myPage(canvas, doc):
@@ -294,30 +297,15 @@ def myPageWrapper(institution_contact, watermark_path):
 
         canvas.setFont('Calibri', 8)  # sets the font for contact
 
-        # canvas.drawRightString(
-        #     WIDTH - (.4 * inch),
-        #     .4 * inch,  # draw the website at the bottom right of the page
-        #     institution_contact['website'])
-
         canvas.setLineWidth(2)
         canvas.setStrokeColorRGB(0, 0, 0)
         canvas.line(.4 * inch, .8 * inch, 
             WIDTH - (.4 * inch), .8 * inch)  # adjust the position of the line
 
-        canvas.drawString(
-            .4 * inch,
-            .6 * inch,  # draw the phone at the second line from the bottom
-            institution_contact['phone'])
-
-        canvas.drawCentredString(
-            WIDTH / 2.0,
-            .6 * inch,  # draw the address at the second line from the bottom
-            institution_contact['address'])
-
         canvas.drawRightString(
             WIDTH - (.4 * inch),
             .6 * inch,  # draw the email at the second line from the bottom
-            institution_contact['email'])
+            f"Dra. {assigned_physician}  -  Médica Radioterapeuta ({license})")      #    < ------------------------------
 
         # restore the state to what it was when saved
         canvas.restoreState()
@@ -441,7 +429,13 @@ def generate_print_pdf(pdfname, institution_contact, image_path, watermark_path,
     obs_title = Paragraph(f"OBSERVACIONES: {prescription_dict['Nota de Observaciones']} - {alert_string}", styles['PDFTitle']) 
     story.append(obs_title)
 
-    doc.build(story, onFirstPage=myPageWrapper(institution_contact, watermark_path))
+    license_dict = {'Romina Ventimiglia': 'MP:2250-MN:121977', 
+                    'Agostina Villegas': 'MP:9624', 
+                    'Laura Bergamin': 'MP:9762'}
+    
+    actual_physician = prescription_dict['Medico Tratante']
+
+    doc.build(story, onFirstPage=myPageWrapper(actual_physician, license_dict[actual_physician], watermark_path))
 
     return pdfname
 
@@ -503,7 +497,7 @@ def prescription_importer(frontend_data, contraints_excel_filepath):
     patient_data_dict[age_key] = str(calculate_age(patient_data_dict[birthday_key]))
 
     #Reordeno las key en el orden que me gusta
-    keys_to_move = ['Ciudad/País', 'Fecha de admisión', 'Obra social', 'Médico derivante']
+    keys_to_move = ['Ciudad/País', 'Fecha de admisión', 'Obra social', 'Medico derivante']
     [move_item_to_end(patient_data_dict, key_to_move) for key_to_move in keys_to_move]
 
     targets_chart, constraints_chart = raw_importer(contraints_excel_filepath, prescription_dict['Prescripci\u00f3n'])
