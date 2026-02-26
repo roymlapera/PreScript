@@ -29,10 +29,10 @@ jobs:
 
       - name: Build with PyInstaller
         run: |
-          pyinstaller --add-data "fonts;fonts" --add-data "images;images" --add-data "protocols;protocols" --clean --noconsole --hidden-import=frontend --hidden-import=backend --hidden-import=xlstools --icon=icon.ico PreScript.py
+          pyinstaller --onefile --add-data "fonts;fonts" --add-data "images;images" --add-data "protocols;protocols" --clean --noconsole --hidden-import=frontend --hidden-import=backend --hidden-import=xlstools --icon=icon.ico PreScript.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: PreScript_${{ matrix.os }}_Python${{ matrix.python-version }}
-          path: dist/PreScript/
+          path: dist/PreScript.exe
