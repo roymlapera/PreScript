@@ -24,12 +24,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install customtkinter==5.2.1 numpy==1.24.4 openpyxl==3.0.9 pandas==3.0.1 Pillow==12.1.1 reportlab==4.0.4 Unidecode==1.3.8
-          pip install pyinstaller pyinstaller-hooks-contrib
+          pip -m install customtkinter==5.2.1 numpy==1.24.4 openpyxl==3.0.9 pandas==3.0.1 Pillow==12.1.1 reportlab==4.0.4 Unidecode==1.3.8
+          pip -m install pyinstaller pyinstaller-hooks-contrib
 
       - name: Build with PyInstaller
         run: |
-          pyinstaller --onefile --add-data "fonts;fonts" --add-data "images;images" --add-data "protocols;protocols" --clean --noconsole --hidden-import=frontend --hidden-import=backend --hidden-import=xlstools --icon=icon.ico PreScript.py
+          pyinstaller --onefile --collect-all customtkinter --add-data "fonts;fonts" --add-data "images;images" --add-data "protocols;protocols" --clean --noconsole --hidden-import=frontend --hidden-import=backend --hidden-import=xlstools --hidden-import=customtkinter --icon=icon.ico PreScript.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
