@@ -3,111 +3,169 @@ import backend
 from unidecode import unidecode
 import sys
 import os
+import json
+
 
 def resource_path(relative_path):
-        """ Get absolute path to resource, works for dev and for PyInstaller 
-        https://stackoverflow.com/questions/31836104/pyinstaller-and-onefile-how-to-include-an-image-in-the-exe-file"""
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
 
-        try:
-            # PyInstaller creates a temp folder and stores path in _MEIPASS
-            base_path = sys._MEIPASS
-            #base_path = sys._MEIPASS2
-        except Exception:
-            base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
-        return os.path.join(base_path, relative_path)
 
-def filename_creator(save_path ,patient_data_dict, prescription_dict):
-    patient_ID = patient_data_dict['HC']
-    patient_name = patient_data_dict['Nombres']
-    patient_surname = patient_data_dict['Apellido']
-    patient_presc = prescription_dict['Prescripción']
+def get_app_dir():
+    if getattr(sys, "frozen", False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
+
+
+def get_paths_json_path():
+    return os.path.join(get_app_dir(), "file_paths.json")
+
+
+def load_file_paths():
+    json_path = get_paths_json_path()
+
+    if not os.path.exists(json_path):
+        raise FileNotFoundError(
+            f"No se encontró file_paths.json en:\n{json_path}"
+        )
+
+    with open(json_path, "r", encoding="utf-8") as f:
+        paths = json.load(f)
+
+    required_keys = ["save_path", "template_excel_path"]
+
+    for key in required_keys:
+        if key not in paths:
+            raise KeyError(f"Falta la clave '{key}' en file_paths.json")
+
+    return paths
+
+
+def filename_creator(save_path, patient_data_dict, prescription_dict):
+    patient_ID = patient_data_dict["HC"]
+    patient_name = patient_data_dict["Nombres"]
+    patient_surname = patient_data_dict["Apellido"]
+    patient_presc = prescription_dict["Prescripción"]
 
     patient_name_noaccent = unidecode(patient_name).upper()
     patient_surname_noaccent = unidecode(patient_surname).upper()
     patient_presc_noaccent = unidecode(patient_presc)
 
-    pdfname = save_path+f'{patient_ID}_{patient_surname_noaccent}_{patient_name_noaccent}_({patient_presc_noaccent}).pdf'
+    pdfname = os.path.join(
+        save_path,
+        f"{patient_ID}_{patient_surname_noaccent}_{patient_name_noaccent}_({patient_presc_noaccent}).pdf"
+    )
+
     return pdfname
 
-def main():
-    # --------------------------------------------------------------------------------------------
 
+def main():
     DEVELOP_MODE = False
     FRONTEND_QA_MODE = False
     BACKEND_QA_MODE = False
 
-    # --------------------------------------------------------------------------------------------
-
     if DEVELOP_MODE:
-        # Carga nuevamente las librerias para que la actualizacion del codigo se refleje al ejecutar el notebook 
         import importlib
         importlib.reload(frontend)
         importlib.reload(backend)
 
-        # Cambia direccion de guardado para no tener limitaciones de permisos de dominio en carpeta medicos
-        save_path = r'C:\Users\roy.lapera\Documents\RL\Proyectos\INTECNUS-PreScript\PRESCRIPCION'
-    else:
-        save_path = r'C:\Users\roy.lapera\Documents\RL\Proyectos\INTECNUS-PreScript\PRESCRIPCION'
+    paths = load_file_paths()
 
-    # --------------------------------------------------------------------------------------------
+    save_path = paths["save_path"]
+    contraints_excel_filepath = paths["template_excel_path"]
 
+    if not os.path.exists(save_path):
+        raise FileNotFoundError(
+            f"No se encontró el directorio de guardado:\n{save_path}"
+        )
 
-    institution_contact = {'website': 'http://intecnus.org.ar/',
-                            'email': 'contacto@intecnus.org.ar',
-                            'address': 'Ruta Provincial 82 s/n-CP 8400-S.C. de Bariloche, Río Negro, Argentina',
-                            'phone': 'TE: +54294 4461090'}
+    if not os.path.exists(contraints_excel_filepath):
+        raise FileNotFoundError(
+            f"No se encontró el archivo Excel de templates:\n{contraints_excel_filepath}"
+        )
 
-    path = os.path.abspath('').replace('\\', '/')
-    images_path = path + '/images/'
+    institution_contact = {
+        "website": "http://intecnus.org.ar/",
+        "email": "contacto@intecnus.org.ar",
+        "address": "Ruta Provincial 82 s/n-CP 8400-S.C. de Bariloche, Río Negro, Argentina",
+        "phone": "TE: +54294 4461090"
+    }
 
-    header_path = resource_path(images_path + 'CALIDAD.png')
-
-    logo_path = resource_path(images_path + 'logo.png')
-
-    watermark_path = resource_path(images_path + 'marca_agua.png')
-
-    # Reemplazar con path a Excel de contraints actualizado
-    contraints_excel_filepath = resource_path(r'protocols\Protocolo de Constraints.xlsx')
-
-    # --------------------------------------------------------------------------------------------
+    header_path = resource_path(os.path.join("images", "CALIDAD.png"))
+    logo_path = resource_path(os.path.join("images", "logo.png"))
+    watermark_path = resource_path(os.path.join("images", "marca_agua.png"))
 
     if BACKEND_QA_MODE:
-        import xlstools, json
+        import xlstools
 
-        with open("data.json", "r") as archivo:
+        with open("data.json", "r", encoding="utf-8") as archivo:
             data_dict = json.load(archivo)
 
-        presc_templates = xlstools.get_cell_content(file_path=contraints_excel_filepath, cell_coordinate='B2', sheet_name=None)[3:]
+        presc_templates = xlstools.get_cell_content(
+            file_path=contraints_excel_filepath,
+            cell_coordinate="B2",
+            sheet_name=None
+        )[3:]
 
         for template in presc_templates:
-            data_dict['Prescripción'] = template
+            data_dict["Prescripción"] = template
             print(template)
-            patient_data_dict, prescription_dict, targets_chart, constraints_chart = backend.prescription_importer(data_dict, contraints_excel_filepath)
-            pdfname = filename_creator(save_path ,patient_data_dict, prescription_dict)
-            backend.generate_print_pdf(pdfname, institution_contact, header_path, watermark_path, contraints_excel_filepath, patient_data_dict, prescription_dict, targets_chart, constraints_chart)
+
+            patient_data_dict, prescription_dict, targets_chart, constraints_chart = backend.prescription_importer(
+                data_dict,
+                contraints_excel_filepath
+            )
+
+            pdfname = filename_creator(save_path, patient_data_dict, prescription_dict)
+
+            backend.generate_print_pdf(
+                pdfname,
+                institution_contact,
+                header_path,
+                watermark_path,
+                contraints_excel_filepath,
+                patient_data_dict,
+                prescription_dict,
+                targets_chart,
+                constraints_chart
+            )
 
     else:
         app = frontend.App(contraints_excel_filepath, logo_path)
         app.mainloop()
         data_dict = app.data
 
-        if FRONTEND_QA_MODE: 
+        if FRONTEND_QA_MODE:
             return
-        else:
-            patient_data_dict, prescription_dict, targets_chart, constraints_chart = backend.prescription_importer(data_dict, contraints_excel_filepath)
-            pdfname = filename_creator(save_path ,patient_data_dict, prescription_dict)
 
-            backend.generate_print_pdf(pdfname, institution_contact, header_path, watermark_path, contraints_excel_filepath, patient_data_dict, prescription_dict, targets_chart, constraints_chart)
+        patient_data_dict, prescription_dict, targets_chart, constraints_chart = backend.prescription_importer(
+            data_dict,
+            contraints_excel_filepath
+        )
 
-        #Abro la prescripcion nueva para visualizar
+        pdfname = filename_creator(save_path, patient_data_dict, prescription_dict)
+
+        backend.generate_print_pdf(
+            pdfname,
+            institution_contact,
+            header_path,
+            watermark_path,
+            contraints_excel_filepath,
+            patient_data_dict,
+            prescription_dict,
+            targets_chart,
+            constraints_chart
+        )
+
         if DEVELOP_MODE:
             backend.open_pdf_with_vscode(pdfname)
         else:
             return
-            # backend.open_pdf_with_chrome(pdfname)
 
-###################################################################################################
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
