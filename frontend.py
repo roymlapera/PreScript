@@ -6,11 +6,33 @@ from PIL import Image, ImageTk
 import openpyxl
 import xlstools
 import pandas as pd
+import os
+import sys
+import json
+from tkinter import filedialog, messagebox
 
 from backend import raw_importer
 
 customtkinter.set_appearance_mode("dark")  # Modes: "System" (standard), "Dark", "Light"
 customtkinter.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
+
+
+def get_app_dir():
+    """
+    Devuelve la carpeta donde vive el ejecutable cuando corre como .exe,
+    o la carpeta del archivo .py cuando corre en modo desarrollo.
+    """
+    if getattr(sys, "frozen", False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
+
+
+def get_paths_json_path():
+    """
+    file_paths.json queda externo al ejecutable, en la misma carpeta que el .exe.
+    """
+    return os.path.join(get_app_dir(), "file_paths.json")
+
 
 # %%
 class PlaceholderTextbox(customtkinter.CTkTextbox):
@@ -51,6 +73,12 @@ class App(customtkinter.CTk):
 
         self.icon_path = icon_path
         self.contraints_excel_filepath = contraints_excel_filepath
+
+        if not os.path.exists(self.contraints_excel_filepath):
+            raise FileNotFoundError(
+                f"No se encontró el archivo Excel de templates:\n{self.contraints_excel_filepath}"
+            )
+
         self.data = {}  #Diccionario para guardar los datos ingresados por el medico
 
         def patient_data_label_generator(self, title: str, row_number: int) -> None:
@@ -126,11 +154,20 @@ class App(customtkinter.CTk):
         self.appearance_frame = customtkinter.CTkFrame(self, width=300, corner_radius=0)
         self.appearance_frame.grid(row=2, column=0, columnspan=2, padx=10, pady=10, sticky="ew")
 
+        self.options_button = customtkinter.CTkButton(
+            master=self.appearance_frame,
+            text="Opciones",
+            border_width=3,
+            text_color=("gray10", "#DCE4EE"),
+            command=self.options
+        )
+        self.options_button.grid(row=0, column=0, columnspan=2, padx=10, pady=10, sticky="ew")
+
         self.appearance_mode_label = customtkinter.CTkLabel(self.appearance_frame, text="Apariencia", font=customtkinter.CTkFont(size=15, weight="bold"), anchor="n")
-        self.appearance_mode_label.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+        self.appearance_mode_label.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
         self.appearance_mode_optionemenu = customtkinter.CTkOptionMenu(self.appearance_frame, values=["Dark", "Light"],
                                                                        command=self.change_appearance_mode_event)
-        self.appearance_mode_optionemenu.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
+        self.appearance_mode_optionemenu.grid(row=1, column=1, padx=10, pady=10, sticky="ew")
 
         self.appearance_mode_optionemenu.set("Dark")
         
@@ -186,7 +223,16 @@ class App(customtkinter.CTk):
         # -------------------------------------------------
 
         # Eleccion del template de prescripcion
-        self.presc_templates = xlstools.get_cell_content(file_path=self.contraints_excel_filepath, cell_coordinate='B2', sheet_name=None)[3:]
+        presc_templates_raw = xlstools.get_cell_content(
+            file_path=self.contraints_excel_filepath,
+            cell_coordinate='B2',
+            sheet_name=None
+        )
+        if not presc_templates_raw:
+            raise ValueError(
+                f"No se pudieron leer los templates de prescripción desde el Excel:\n{self.contraints_excel_filepath}"
+            )
+        self.presc_templates = presc_templates_raw[3:]
 
         self.presc_menu, self.chosen_presc_template = self._create_dropdown_menu(self.presc_frame, 
                                                                                  'Template de Prescripción', 
@@ -424,10 +470,199 @@ class App(customtkinter.CTk):
             self.tree.insert("", "end", values=list(row))
 
 
+    def load_file_paths(self):
+        """
+        Lee siempre file_paths.json. No usa valores por defecto.
+        Requiere las claves:
+        - save_path
+        - template_excel_path
+        """
+        json_path = get_paths_json_path()
+
+        if not os.path.exists(json_path):
+            raise FileNotFoundError(
+                f"No se encontró el archivo de configuración:\n{json_path}"
+            )
+
+        try:
+            with open(json_path, "r", encoding="utf-8") as f:
+                paths = json.load(f)
+        except Exception as e:
+            raise RuntimeError(
+                f"No se pudo leer el archivo de configuración file_paths.json:\n{e}"
+            )
+
+        required_keys = ["save_path", "template_excel_path"]
+        for key in required_keys:
+            if key not in paths:
+                raise KeyError(
+                    f"Falta la clave '{key}' en file_paths.json"
+                )
+
+        return paths
+
+    def options(self):
+        try:
+            paths = self.load_file_paths()
+        except Exception as e:
+            messagebox.showerror("Error de configuración", str(e))
+            return
+
+        self.options_window = customtkinter.CTkToplevel(self)
+        self.options_window.title("Direcciones de guardado y archivo Excel")
+        self.options_window.geometry("820x270")
+        self.options_window.transient(self)
+        self.options_window.grab_set()
+        self.options_window.lift()
+        self.options_window.focus_force()
+
+        title_label = customtkinter.CTkLabel(
+            self.options_window,
+            text="Configuración de rutas",
+            font=customtkinter.CTkFont(size=20, weight="bold")
+        )
+        title_label.grid(row=0, column=0, columnspan=3, padx=20, pady=(20, 10), sticky="w")
+
+        save_label = customtkinter.CTkLabel(
+            self.options_window,
+            text="Directorio de guardado:"
+        )
+        save_label.grid(row=1, column=0, padx=20, pady=10, sticky="w")
+
+        self.save_path_entry = customtkinter.CTkEntry(self.options_window, width=520)
+        self.save_path_entry.grid(row=1, column=1, padx=10, pady=10)
+        self.save_path_entry.insert(0, paths["save_path"])
+
+        browse_save_button = customtkinter.CTkButton(
+            self.options_window,
+            text="Examinar",
+            width=100,
+            command=lambda: self.browse_path(self.save_path_entry)
+        )
+        browse_save_button.grid(row=1, column=2, padx=10, pady=10)
+
+        template_excel_label = customtkinter.CTkLabel(
+            self.options_window,
+            text="Archivo Excel de templates:"
+        )
+        template_excel_label.grid(row=2, column=0, padx=20, pady=10, sticky="w")
+
+        self.template_excel_path_entry = customtkinter.CTkEntry(self.options_window, width=520)
+        self.template_excel_path_entry.grid(row=2, column=1, padx=10, pady=10)
+        self.template_excel_path_entry.insert(0, paths["template_excel_path"])
+
+        browse_template_excel_button = customtkinter.CTkButton(
+            self.options_window,
+            text="Examinar",
+            width=100,
+            command=lambda: self.browse_file(self.template_excel_path_entry)
+        )
+        browse_template_excel_button.grid(row=2, column=2, padx=10, pady=10)
+
+        save_button = customtkinter.CTkButton(
+            self.options_window,
+            text="Guardar",
+            command=self.save_paths
+        )
+        save_button.grid(row=3, column=1, padx=10, pady=20, sticky="e")
+
+    def browse_path(self, entry_widget):
+        selected_path = filedialog.askdirectory()
+
+        if selected_path:
+            entry_widget.delete(0, tk.END)
+            entry_widget.insert(0, selected_path)
+
+    def browse_file(self, entry_widget):
+        selected_file = filedialog.askopenfilename(
+            title="Seleccionar archivo Excel",
+            filetypes=[
+                ("Archivos Excel", "*.xlsx *.xlsm *.xls"),
+                ("Todos los archivos", "*.*")
+            ]
+        )
+
+        if selected_file:
+            entry_widget.delete(0, tk.END)
+            entry_widget.insert(0, selected_file)
+
+    def save_paths(self):
+        paths = {
+            "save_path": self.save_path_entry.get(),
+            "template_excel_path": self.template_excel_path_entry.get()
+        }
+
+        if not os.path.exists(paths["template_excel_path"]):
+            messagebox.showerror(
+                "Excel no encontrado",
+                f"No se encontró el archivo Excel:\n{paths['template_excel_path']}"
+            )
+            return
+
+        json_path = get_paths_json_path()
+
+        try:
+            with open(json_path, "w", encoding="utf-8") as f:
+                json.dump(paths, f, indent=4, ensure_ascii=False)
+        except Exception as e:
+            messagebox.showerror(
+                "Error al guardar",
+                f"No se pudo guardar file_paths.json:\n{e}"
+            )
+            return
+
+        self.output_path = paths["save_path"]
+        self.contraints_excel_filepath = paths["template_excel_path"]
+
+        try:
+            self.reload_excel_dependent_menus()
+        except Exception as e:
+            messagebox.showwarning(
+                "Configuración guardada",
+                "Las rutas se guardaron, pero no se pudieron recargar los templates. "
+                "Cerrá y abrí nuevamente PreScript.\n\n"
+                f"Detalle:\n{e}"
+            )
+
+        self.options_window.destroy()
+
+    def reload_excel_dependent_menus(self):
+        """
+        Recarga los menús que dependen del Excel después de cambiar la ruta.
+        """
+        presc_templates_raw = xlstools.get_cell_content(
+            file_path=self.contraints_excel_filepath,
+            cell_coordinate='B2',
+            sheet_name=None
+        )
+        if not presc_templates_raw:
+            raise ValueError("No se pudieron leer templates de prescripción desde el nuevo Excel.")
+
+        self.presc_templates = presc_templates_raw[3:]
+        self.presc_menu.configure(values=self.presc_templates)
+        self.chosen_presc_template.set(self.presc_templates[0])
+        self.presc_menu.set(self.presc_templates[0])
+        self.presc_template = self.presc_templates[0]
+
+        if hasattr(self, "default_images_dict"):
+            del self.default_images_dict
+
+        self.images_templates = self.get_images_template()
+        self.images_menu.configure(values=self.images_templates)
+        if self.images_templates:
+            self.chosen_images_template.set(self.images_templates[0])
+            self.images_menu.set(self.images_templates[0])
+            self.images_template = self.images_templates[0]
+
+
+
 
     def _create_dropdown_menu(self, frame, text, options, row, column, width=250, padx=20, pady=10, sticky=tk.W, callback=None):
         dropdown_label = customtkinter.CTkLabel(master=frame, text=text, anchor="w")
         dropdown_label.grid(row=row, column=column, padx=padx, pady=pady, sticky=sticky)
+
+        if options is None or len(options) == 0:
+            raise ValueError(f"No hay opciones disponibles para el menú: {text}")
 
         chosen_option = tk.StringVar(value=options[0])
 

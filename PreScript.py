@@ -46,9 +46,9 @@ def main():
         importlib.reload(backend)
 
         # Cambia direccion de guardado para no tener limitaciones de permisos de dominio en carpeta medicos
-        save_path = '//FS-201-Radioterapia.intecnus.org.ar/fisicos/8 - Físicos Médicos/Roy/INTECNUS-PreScript/'
+        save_path = r'C:\Users\roy.lapera\Documents\RL\Proyectos\INTECNUS-PreScript\PRESCRIPCION'
     else:
-        save_path = '//FS-201-Radioterapia.intecnus.org.ar/medicos/PRESCRIPCION/'
+        save_path = r'C:\Users\roy.lapera\Documents\RL\Proyectos\INTECNUS-PreScript\PRESCRIPCION'
 
     # --------------------------------------------------------------------------------------------
 
@@ -68,7 +68,7 @@ def main():
     watermark_path = resource_path(images_path + 'marca_agua.png')
 
     # Reemplazar con path a Excel de contraints actualizado
-    contraints_excel_filepath = resource_path('//FS-201-Radioterapia.intecnus.org.ar/fisicos/8 - Físicos Médicos/Natalia Espector/2024 - Protocolos clínicos/Protocolo de Constraints.xlsx')
+    contraints_excel_filepath = resource_path(r'protocols\Protocolo de Constraints.xlsx')
 
     # --------------------------------------------------------------------------------------------
 
