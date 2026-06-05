@@ -1,0 +1,63 @@
+name: Build PreScript EXE
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [windows-2022]
+        python-version: ['3.11.4']
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pyinstaller pyinstaller-hooks-contrib
+          python -m pip install -r requirements.txt
+
+      - name: Build with PyInstaller
+        run: |
+          pyinstaller --onefile ^
+            --collect-all customtkinter ^
+            --add-data "fonts;fonts" ^
+            --add-data "images;images" ^
+            --add-data "protocols;protocols" ^
+            --clean ^
+            --noconsole ^
+            --hidden-import=frontend ^
+            --hidden-import=backend ^
+            --hidden-import=xlstools ^
+            --hidden-import=customtkinter ^
+            --icon=icon.ico ^
+            PreScript.py
+
+      - name: Upload executable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PreScript_EXE
+          path: |
+            dist/PreScript.exe
+            file_paths.json
+
+      - name: Upload source code artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PreScript_Source
+          path: |
+            PreScript.py
+            frontend.py
+            backend.py
+            file_paths.json
